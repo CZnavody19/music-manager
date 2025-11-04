@@ -1,0 +1,15 @@
+type ServiceStatus {
+    youtube: Boolean!
+    discord: Boolean!
+}
+
+extend type Query {
+    getServiceStatus: ServiceStatus!
+}
+
+extend type Mutation {
+    enableYoutube(enable: Boolean!): Boolean!
+    enableDiscord(enable: Boolean!): Boolean!
+
+    sendTestDiscordMessage: Boolean! @discordEnabled
+}

@@ -1,0 +1,218 @@
+diff --git a/node_modules/@apollo/client/package.json b/node_modules/@apollo/client/package.json
+index dec20e1..055f530 100644
+--- a/node_modules/@apollo/client/package.json
++++ b/node_modules/@apollo/client/package.json
+@@ -178,5 +178,211 @@
+     "pretty-format": "^29.7.0",
+     "@testing-library/dom": "$@testing-library/dom"
+   },
+-  "type": "module"
++  "type": "module",
++  "exports": {
++    ".": {
++      "import": "./index.js",
++      "require": "./main.cjs",
++      "types": "./index.d.ts"
++    },
++    "./package.json": "./package.json",
++    "./cache": {
++      "import": "./cache/index.js",
++      "require": "./cache/cache.cjs",
++      "types": "./cache/index.d.ts"
++    },
++    "./cache/package.json": "./cache/package.json",
++    "./errors": {
++      "import": "./errors/index.js",
++      "require": "./errors/errors.cjs",
++      "types": "./errors/index.d.ts"
++    },
++    "./errors/package.json": "./errors/package.json",
++    "./dev": {
++      "import": "./dev/index.js",
++      "require": "./dev/dev.cjs",
++      "types": "./dev/index.d.ts"
++    },
++    "./dev/package.json": "./dev/package.json",
++    "./core": {
++      "import": "./core/index.js",
++      "require": "./core/core.cjs",
++      "types": "./core/index.d.ts"
++    },
++    "./core/package.json": "./core/package.json",
++    "./masking": {
++      "import": "./masking/index.js",
++      "require": "./masking/masking.cjs",
++      "types": "./masking/index.d.ts"
++    },
++    "./masking/package.json": "./masking/package.json",
++    "./react": {
++      "import": "./react/index.js",
++      "require": "./react/react.cjs",
++      "types": "./react/index.d.ts"
++    },
++    "./react/package.json": "./react/package.json",
++    "./testing": {
++      "import": "./testing/index.js",
++      "require": "./testing/testing.cjs",
++      "types": "./testing/index.d.ts"
++    },
++    "./testing/package.json": "./testing/package.json",
++    "./utilities": {
++      "import": "./utilities/index.js",
++      "require": "./utilities/utilities.cjs",
++      "types": "./utilities/index.d.ts"
++    },
++    "./utilities/package.json": "./utilities/package.json",
++    "./link/batch": {
++      "import": "./link/batch/index.js",
++      "require": "./link/batch/batch.cjs",
++      "types": "./link/batch/index.d.ts"
++    },
++    "./link/batch/package.json": "./link/batch/package.json",
++    "./link/batch-http": {
++      "import": "./link/batch-http/index.js",
++      "require": "./link/batch-http/batch-http.cjs",
++      "types": "./link/batch-http/index.d.ts"
++    },
++    "./link/batch-http/package.json": "./link/batch-http/package.json",
++    "./link/context": {
++      "import": "./link/context/index.js",
++      "require": "./link/context/context.cjs",
++      "types": "./link/context/index.d.ts"
++    },
++    "./link/context/package.json": "./link/context/package.json",
++    "./link/core": {
++      "import": "./link/core/index.js",
++      "require": "./link/core/core.cjs",
++      "types": "./link/core/index.d.ts"
++    },
++    "./link/core/package.json": "./link/core/package.json",
++    "./link/error": {
++      "import": "./link/error/index.js",
++      "require": "./link/error/error.cjs",
++      "types": "./link/error/index.d.ts"
++    },
++    "./link/error/package.json": "./link/error/package.json",
++    "./link/http": {
++      "import": "./link/http/index.js",
++      "require": "./link/http/http.cjs",
++      "types": "./link/http/index.d.ts"
++    },
++    "./link/http/package.json": "./link/http/package.json",
++    "./link/persisted-queries": {
++      "import": "./link/persisted-queries/index.js",
++      "require": "./link/persisted-queries/persisted-queries.cjs",
++      "types": "./link/persisted-queries/index.d.ts"
++    },
++    "./link/persisted-queries/package.json": "./link/persisted-queries/package.json",
++    "./link/remove-typename": {
++      "import": "./link/remove-typename/index.js",
++      "require": "./link/remove-typename/remove-typename.cjs",
++      "types": "./link/remove-typename/index.d.ts"
++    },
++    "./link/remove-typename/package.json": "./link/remove-typename/package.json",
++    "./link/retry": {
++      "import": "./link/retry/index.js",
++      "require": "./link/retry/retry.cjs",
++      "types": "./link/retry/index.d.ts"
++    },
++    "./link/retry/package.json": "./link/retry/package.json",
++    "./link/schema": {
++      "import": "./link/schema/index.js",
++      "require": "./link/schema/schema.cjs",
++      "types": "./link/schema/index.d.ts"
++    },
++    "./link/schema/package.json": "./link/schema/package.json",
++    "./link/subscriptions": {
++      "import": "./link/subscriptions/index.js",
++      "require": "./link/subscriptions/subscriptions.cjs",
++      "types": "./link/subscriptions/index.d.ts"
++    },
++    "./link/subscriptions/package.json": "./link/subscriptions/package.json",
++    "./link/utils": {
++      "import": "./link/utils/index.js",
++      "require": "./link/utils/utils.cjs",
++      "types": "./link/utils/index.d.ts"
++    },
++    "./link/utils/package.json": "./link/utils/package.json",
++    "./link/ws": {
++      "import": "./link/ws/index.js",
++      "require": "./link/ws/ws.cjs",
++      "types": "./link/ws/index.d.ts"
++    },
++    "./link/ws/package.json": "./link/ws/package.json",
++    "./react/components": {
++      "import": "./react/components/index.js",
++      "require": "./react/components/components.cjs",
++      "types": "./react/components/index.d.ts"
++    },
++    "./react/components/package.json": "./react/components/package.json",
++    "./react/context": {
++      "import": "./react/context/index.js",
++      "require": "./react/context/context.cjs",
++      "types": "./react/context/index.d.ts"
++    },
++    "./react/context/package.json": "./react/context/package.json",
++    "./react/hoc": {
++      "import": "./react/hoc/index.js",
++      "require": "./react/hoc/hoc.cjs",
++      "types": "./react/hoc/index.d.ts"
++    },
++    "./react/hoc/package.json": "./react/hoc/package.json",
++    "./react/hooks": {
++      "import": "./react/hooks/index.js",
++      "require": "./react/hooks/hooks.cjs",
++      "types": "./react/hooks/index.d.ts"
++    },
++    "./react/hooks/package.json": "./react/hooks/package.json",
++    "./react/internal": {
++      "import": "./react/internal/index.js",
++      "require": "./react/internal/internal.cjs",
++      "types": "./react/internal/index.d.ts"
++    },
++    "./react/internal/package.json": "./react/internal/package.json",
++    "./react/parser": {
++      "import": "./react/parser/index.js",
++      "require": "./react/parser/parser.cjs",
++      "types": "./react/parser/index.d.ts"
++    },
++    "./react/parser/package.json": "./react/parser/package.json",
++    "./react/ssr": {
++      "import": "./react/ssr/index.js",
++      "require": "./react/ssr/ssr.cjs",
++      "types": "./react/ssr/index.d.ts"
++    },
++    "./react/ssr/package.json": "./react/ssr/package.json",
++    "./testing/core": {
++      "import": "./testing/core/index.js",
++      "require": "./testing/core/core.cjs",
++      "types": "./testing/core/index.d.ts"
++    },
++    "./testing/core/package.json": "./testing/core/package.json",
++    "./testing/experimental": {
++      "import": "./testing/experimental/index.js",
++      "require": "./testing/experimental/experimental.cjs",
++      "types": "./testing/experimental/index.d.ts"
++    },
++    "./testing/experimental/package.json": "./testing/experimental/package.json",
++    "./utilities/globals": {
++      "import": "./utilities/globals/index.js",
++      "require": "./utilities/globals/globals.cjs",
++      "types": "./utilities/globals/index.d.ts"
++    },
++    "./utilities/globals/package.json": "./utilities/globals/package.json",
++    "./utilities/subscriptions/relay": {
++      "import": "./utilities/subscriptions/relay/index.js",
++      "require": "./utilities/subscriptions/relay/relay.cjs",
++      "types": "./utilities/subscriptions/relay/index.d.ts"
++    },
++    "./utilities/subscriptions/relay/package.json": "./utilities/subscriptions/relay/package.json",
++    "./utilities/subscriptions/urql": {
++      "import": "./utilities/subscriptions/urql/index.js",
++      "require": "./utilities/subscriptions/urql/urql.cjs",
++      "types": "./utilities/subscriptions/urql/index.d.ts"
++    },
++    "./utilities/subscriptions/urql/package.json": "./utilities/subscriptions/urql/package.json"
++  }
+ }
+\ No newline at end of file

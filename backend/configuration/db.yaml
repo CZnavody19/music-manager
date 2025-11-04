@@ -1,0 +1,6 @@
+DriverName: postgres
+ConnectionURI: postgres://music:music@db:5432/musicdb?sslmode=disable
+RunMigration: false
+MaxOpenConnections: 10
+MaxIdleConnections: 5
+MaxConnectionLifetime: 30m

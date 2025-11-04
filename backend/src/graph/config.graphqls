@@ -1,0 +1,7 @@
+input DiscordConfig {
+    webhookURL: String!
+}
+
+extend type Mutation {
+    setDiscordConfig(config: DiscordConfig!): Boolean!
+}

@@ -1,0 +1,1 @@
+directive @discordEnabled on FIELD_DEFINITION
