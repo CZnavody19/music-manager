@@ -62,6 +62,10 @@ func (d *Discord) Disable(ctx context.Context) error {
 }
 
 func (d *Discord) SendMessage(ctx context.Context, message *domain.DiscordMessage) error {
+	if !d.enabled {
+		return nil
+	}
+
 	data, err := json.Marshal(domain.DiscordMessageSchema{
 		Embeds: []domain.DiscordMessage{*message},
 	})

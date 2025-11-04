@@ -17,3 +17,13 @@ func (im *InputMapper) MapDiscordConfig(input model.DiscordConfig) *domain.Disco
 		WebhookURL: input.WebhookURL,
 	}
 }
+
+func (im *InputMapper) MapPlexConfig(input model.PlexConfig) *domain.PlexConfig {
+	return &domain.PlexConfig{
+		Protocol:  input.Protocol,
+		Host:      input.Host,
+		Port:      input.Port,
+		Token:     input.Token,
+		LibraryID: input.LibraryID,
+	}
+}

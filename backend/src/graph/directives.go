@@ -28,3 +28,21 @@ func (d *Directives) DiscordEnabled(ctx context.Context, obj interface{}, next g
 
 	return next(ctx)
 }
+
+func (d *Directives) PlexEnabled(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+	enabled := d.resolver.Plex.IsEnabled()
+	if !enabled {
+		return nil, fmt.Errorf("plex service is not enabled")
+	}
+
+	return next(ctx)
+}
+
+func (d *Directives) YoutubeEnabled(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+	enabled := d.resolver.YouTube.IsEnabled()
+	if !enabled {
+		return nil, fmt.Errorf("youtube service is not enabled")
+	}
+
+	return next(ctx)
+}

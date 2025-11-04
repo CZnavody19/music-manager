@@ -44,14 +44,19 @@ type ResolverRoot interface {
 
 type DirectiveRoot struct {
 	DiscordEnabled func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	PlexEnabled    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	YoutubeEnabled func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 }
 
 type ComplexityRoot struct {
 	Mutation struct {
 		EnableDiscord          func(childComplexity int, enable bool) int
+		EnablePlex             func(childComplexity int, enable bool) int
 		EnableYoutube          func(childComplexity int, enable bool) int
+		RefreshPlexLibrary     func(childComplexity int) int
 		SendTestDiscordMessage func(childComplexity int) int
 		SetDiscordConfig       func(childComplexity int, config model.DiscordConfig) int
+		SetPlexConfig          func(childComplexity int, config model.PlexConfig) int
 	}
 
 	Query struct {
@@ -60,15 +65,19 @@ type ComplexityRoot struct {
 
 	ServiceStatus struct {
 		Discord func(childComplexity int) int
+		Plex    func(childComplexity int) int
 		Youtube func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
 	SetDiscordConfig(ctx context.Context, config model.DiscordConfig) (bool, error)
+	SetPlexConfig(ctx context.Context, config model.PlexConfig) (bool, error)
 	EnableYoutube(ctx context.Context, enable bool) (bool, error)
 	EnableDiscord(ctx context.Context, enable bool) (bool, error)
+	EnablePlex(ctx context.Context, enable bool) (bool, error)
 	SendTestDiscordMessage(ctx context.Context) (bool, error)
+	RefreshPlexLibrary(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
 	GetServiceStatus(ctx context.Context) (*model.ServiceStatus, error)
@@ -104,6 +113,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.EnableDiscord(childComplexity, args["enable"].(bool)), true
+	case "Mutation.enablePlex":
+		if e.complexity.Mutation.EnablePlex == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_enablePlex_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EnablePlex(childComplexity, args["enable"].(bool)), true
 	case "Mutation.enableYoutube":
 		if e.complexity.Mutation.EnableYoutube == nil {
 			break
@@ -115,6 +135,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.EnableYoutube(childComplexity, args["enable"].(bool)), true
+	case "Mutation.refreshPlexLibrary":
+		if e.complexity.Mutation.RefreshPlexLibrary == nil {
+			break
+		}
+
+		return e.complexity.Mutation.RefreshPlexLibrary(childComplexity), true
 	case "Mutation.sendTestDiscordMessage":
 		if e.complexity.Mutation.SendTestDiscordMessage == nil {
 			break
@@ -132,6 +158,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SetDiscordConfig(childComplexity, args["config"].(model.DiscordConfig)), true
+	case "Mutation.setPlexConfig":
+		if e.complexity.Mutation.SetPlexConfig == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setPlexConfig_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetPlexConfig(childComplexity, args["config"].(model.PlexConfig)), true
 
 	case "Query.getServiceStatus":
 		if e.complexity.Query.GetServiceStatus == nil {
@@ -146,6 +183,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ServiceStatus.Discord(childComplexity), true
+	case "ServiceStatus.plex":
+		if e.complexity.ServiceStatus.Plex == nil {
+			break
+		}
+
+		return e.complexity.ServiceStatus.Plex(childComplexity), true
 	case "ServiceStatus.youtube":
 		if e.complexity.ServiceStatus.Youtube == nil {
 			break
@@ -162,6 +205,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputDiscordConfig,
+		ec.unmarshalInputPlexConfig,
 	)
 	first := true
 
@@ -263,16 +307,28 @@ var sources = []*ast.Source{
     webhookURL: String!
 }
 
+input PlexConfig {
+    protocol: String!
+    host: String!
+    port: Int!
+    token: String!
+    libraryID: Int!
+}
+
 extend type Mutation {
     setDiscordConfig(config: DiscordConfig!): Boolean!
+    setPlexConfig(config: PlexConfig!): Boolean!
 }`, BuiltIn: false},
-	{Name: "../directives.graphqls", Input: `directive @discordEnabled on FIELD_DEFINITION`, BuiltIn: false},
+	{Name: "../directives.graphqls", Input: `directive @discordEnabled on FIELD_DEFINITION
+directive @plexEnabled on FIELD_DEFINITION
+directive @youtubeEnabled on FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `type Query
 
 type Mutation`, BuiltIn: false},
 	{Name: "../services.graphqls", Input: `type ServiceStatus {
     youtube: Boolean!
     discord: Boolean!
+    plex: Boolean!
 }
 
 extend type Query {
@@ -282,8 +338,10 @@ extend type Query {
 extend type Mutation {
     enableYoutube(enable: Boolean!): Boolean!
     enableDiscord(enable: Boolean!): Boolean!
+    enablePlex(enable: Boolean!): Boolean!
 
     sendTestDiscordMessage: Boolean! @discordEnabled
+    refreshPlexLibrary: Boolean! @plexEnabled
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -293,6 +351,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // region    ***************************** args.gotpl *****************************
 
 func (ec *executionContext) field_Mutation_enableDiscord_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "enable", ec.unmarshalNBoolean2bool)
+	if err != nil {
+		return nil, err
+	}
+	args["enable"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_enablePlex_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "enable", ec.unmarshalNBoolean2bool)
@@ -318,6 +387,17 @@ func (ec *executionContext) field_Mutation_setDiscordConfig_args(ctx context.Con
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNDiscordConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfig)
+	if err != nil {
+		return nil, err
+	}
+	args["config"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setPlexConfig_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNPlexConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -429,6 +509,47 @@ func (ec *executionContext) fieldContext_Mutation_setDiscordConfig(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_setPlexConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setPlexConfig,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetPlexConfig(ctx, fc.Args["config"].(model.PlexConfig))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setPlexConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setPlexConfig_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_enableYoutube(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -511,6 +632,47 @@ func (ec *executionContext) fieldContext_Mutation_enableDiscord(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_enablePlex(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_enablePlex,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().EnablePlex(ctx, fc.Args["enable"].(bool))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_enablePlex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_enablePlex_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_sendTestDiscordMessage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -553,6 +715,48 @@ func (ec *executionContext) fieldContext_Mutation_sendTestDiscordMessage(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_refreshPlexLibrary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_refreshPlexLibrary,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().RefreshPlexLibrary(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.PlexEnabled == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive plexEnabled is not implemented")
+				}
+				return ec.directives.PlexEnabled(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_refreshPlexLibrary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getServiceStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -581,6 +785,8 @@ func (ec *executionContext) fieldContext_Query_getServiceStatus(_ context.Contex
 				return ec.fieldContext_ServiceStatus_youtube(ctx, field)
 			case "discord":
 				return ec.fieldContext_ServiceStatus_discord(ctx, field)
+			case "plex":
+				return ec.fieldContext_ServiceStatus_plex(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceStatus", field.Name)
 		},
@@ -742,6 +948,35 @@ func (ec *executionContext) _ServiceStatus_discord(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_ServiceStatus_discord(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceStatus_plex(ctx context.Context, field graphql.CollectedField, obj *model.ServiceStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ServiceStatus_plex,
+		func(ctx context.Context) (any, error) {
+			return obj.Plex, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ServiceStatus_plex(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServiceStatus",
 		Field:      field,
@@ -2227,6 +2462,61 @@ func (ec *executionContext) unmarshalInputDiscordConfig(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputPlexConfig(ctx context.Context, obj any) (model.PlexConfig, error) {
+	var it model.PlexConfig
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"protocol", "host", "port", "token", "libraryID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "protocol":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("protocol"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Protocol = data
+		case "host":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("host"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Host = data
+		case "port":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("port"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Port = data
+		case "token":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("token"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Token = data
+		case "libraryID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("libraryID"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LibraryID = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2261,6 +2551,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "setPlexConfig":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setPlexConfig(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "enableYoutube":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_enableYoutube(ctx, field)
@@ -2275,9 +2572,23 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "enablePlex":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_enablePlex(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "sendTestDiscordMessage":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_sendTestDiscordMessage(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "refreshPlexLibrary":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_refreshPlexLibrary(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -2395,6 +2706,11 @@ func (ec *executionContext) _ServiceStatus(ctx context.Context, sel ast.Selectio
 			}
 		case "discord":
 			out.Values[i] = ec._ServiceStatus_discord(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "plex":
+			out.Values[i] = ec._ServiceStatus_plex(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -2774,6 +3090,27 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 
 func (ec *executionContext) unmarshalNDiscordConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfig(ctx context.Context, v any) (model.DiscordConfig, error) {
 	res, err := ec.unmarshalInputDiscordConfig(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNInt2int64(ctx context.Context, v any) (int64, error) {
+	res, err := graphql.UnmarshalInt64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalInt64(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNPlexConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig(ctx context.Context, v any) (model.PlexConfig, error) {
+	res, err := ec.unmarshalInputPlexConfig(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

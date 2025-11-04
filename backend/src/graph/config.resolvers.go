@@ -21,3 +21,15 @@ func (r *mutationResolver) SetDiscordConfig(ctx context.Context, config model.Di
 
 	return true, nil
 }
+
+// SetPlexConfig is the resolver for the setPlexConfig field.
+func (r *mutationResolver) SetPlexConfig(ctx context.Context, config model.PlexConfig) (bool, error) {
+	cfg := r.InputMapper.MapPlexConfig(config)
+
+	err := r.ConfigStore.SavePlexConfig(ctx, cfg)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}

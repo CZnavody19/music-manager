@@ -43,6 +43,22 @@ func (r *mutationResolver) EnableDiscord(ctx context.Context, enable bool) (bool
 	return true, nil
 }
 
+// EnablePlex is the resolver for the enablePlex field.
+func (r *mutationResolver) EnablePlex(ctx context.Context, enable bool) (bool, error) {
+	var err error
+	if enable {
+		err = r.Plex.Enable(ctx)
+	} else {
+		err = r.Plex.Disable(ctx)
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // SendTestDiscordMessage is the resolver for the sendTestDiscordMessage field.
 func (r *mutationResolver) SendTestDiscordMessage(ctx context.Context) (bool, error) {
 	desc := "Description"
@@ -73,10 +89,21 @@ func (r *mutationResolver) SendTestDiscordMessage(ctx context.Context) (bool, er
 	return true, nil
 }
 
+// RefreshPlexLibrary is the resolver for the refreshPlexLibrary field.
+func (r *mutationResolver) RefreshPlexLibrary(ctx context.Context) (bool, error) {
+	err := r.Plex.RefreshLibrary(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // GetServiceStatus is the resolver for the getServiceStatus field.
 func (r *queryResolver) GetServiceStatus(ctx context.Context) (*model.ServiceStatus, error) {
 	return &model.ServiceStatus{
 		Youtube: r.YouTube.IsEnabled(),
 		Discord: r.Discord.IsEnabled(),
+		Plex:    r.Plex.IsEnabled(),
 	}, nil
 }

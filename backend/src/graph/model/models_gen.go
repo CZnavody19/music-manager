@@ -9,10 +9,19 @@ type DiscordConfig struct {
 type Mutation struct {
 }
 
+type PlexConfig struct {
+	Protocol  string `json:"protocol"`
+	Host      string `json:"host"`
+	Port      int64  `json:"port"`
+	Token     string `json:"token"`
+	LibraryID int64  `json:"libraryID"`
+}
+
 type Query struct {
 }
 
 type ServiceStatus struct {
 	Youtube bool `json:"youtube"`
 	Discord bool `json:"discord"`
+	Plex    bool `json:"plex"`
 }

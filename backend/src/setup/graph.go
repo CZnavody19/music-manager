@@ -11,6 +11,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/graph/generated"
 	"github.com/CZnavody19/music-manager/src/http"
 	"github.com/CZnavody19/music-manager/src/internal/discord"
+	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
 )
 
@@ -29,6 +30,11 @@ func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) 
 		return nil, err
 	}
 
+	plx, err := plex.NewPlex(configStore)
+	if err != nil {
+		return nil, err
+	}
+
 	httpHandler := http.NewHttpHandler(configStore)
 
 	graphInputMapper := graph.NewInputMapper()
@@ -37,6 +43,7 @@ func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) 
 		InputMapper: graphInputMapper,
 		YouTube:     yt,
 		Discord:     dsc,
+		Plex:        plx,
 		HttpHandler: httpHandler,
 		ConfigStore: configStore,
 	}, nil
@@ -44,6 +51,8 @@ func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) 
 
 func SetupDirectives(config *generated.Config, directives *graph.Directives) {
 	config.Directives.DiscordEnabled = directives.DiscordEnabled
+	config.Directives.PlexEnabled = directives.PlexEnabled
+	config.Directives.YoutubeEnabled = directives.YoutubeEnabled
 }
 
 func SetupPresenters(srv *handler.Server) {

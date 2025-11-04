@@ -8,7 +8,6 @@ import (
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/config/model"
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/config/table"
 	"github.com/CZnavody19/music-manager/src/domain"
-	"github.com/go-jet/jet/v2/postgres"
 )
 
 type ConfigStore struct {
@@ -36,12 +35,9 @@ func (cs *ConfigStore) GetYoutubeConfig(ctx context.Context) (*domain.YouTubeCon
 }
 
 func (cs *ConfigStore) SaveYoutubeFiles(ctx context.Context, oauthData, tokenData []byte) error {
-	stmt := table.Youtube.INSERT(table.Youtube.OAuth, table.Youtube.Token, table.Youtube.Enabled).VALUES(oauthData, tokenData, true).ON_CONFLICT(table.Youtube.Enabled).DO_UPDATE(
-		postgres.SET(
-			table.Youtube.OAuth.SET(table.Youtube.EXCLUDED.OAuth),
-			table.Youtube.Token.SET(table.Youtube.EXCLUDED.Token),
-		),
-	)
+	stmt := table.Youtube.INSERT(table.Youtube.OAuth, table.Youtube.Token, table.Youtube.Enabled).VALUES(oauthData, tokenData, true)
+
+	stmt = db.DoUpsert(stmt, table.Youtube.Enabled, table.Youtube.MutableColumns, table.Youtube.EXCLUDED.MutableColumns)
 
 	_, err := stmt.ExecContext(ctx, cs.DB)
 
@@ -61,11 +57,37 @@ func (cs *ConfigStore) GetDiscordConfig(ctx context.Context) (*domain.DiscordCon
 }
 
 func (cs *ConfigStore) SaveDiscordConfig(ctx context.Context, config *domain.DiscordConfig) error {
-	stmt := table.Discord.INSERT(table.Discord.WebhookURL, table.Discord.Enabled).VALUES(config.WebhookURL, true).ON_CONFLICT(table.Discord.Enabled).DO_UPDATE(
-		postgres.SET(
-			table.Discord.WebhookURL.SET(table.Discord.EXCLUDED.WebhookURL),
-		),
-	)
+	stmt := table.Discord.INSERT(table.Discord.WebhookURL, table.Discord.Enabled).VALUES(config.WebhookURL, true)
+
+	stmt = db.DoUpsert(stmt, table.Discord.Enabled, table.Discord.MutableColumns, table.Discord.EXCLUDED.MutableColumns)
+
+	_, err := stmt.ExecContext(ctx, cs.DB)
+
+	return err
+}
+
+func (cs *ConfigStore) GetPlexConfig(ctx context.Context) (*domain.PlexConfig, error) {
+	stmt := table.Plex.SELECT(table.Plex.AllColumns).WHERE(table.Plex.Enabled.IS_TRUE())
+
+	var dest model.Plex
+	err := stmt.QueryContext(ctx, cs.DB, &dest)
+	if err != nil {
+		return nil, err
+	}
+
+	return cs.Mapper.MapPlexConfig(&dest), nil
+}
+
+func (cs *ConfigStore) SavePlexConfig(ctx context.Context, config *domain.PlexConfig) error {
+	stmt := table.Plex.INSERT(table.Plex.AllColumns).MODEL(struct {
+		Enabled bool
+		domain.PlexConfig
+	}{
+		Enabled:    true,
+		PlexConfig: *config,
+	})
+
+	stmt = db.DoUpsert(stmt, table.Plex.Enabled, table.Plex.MutableColumns, table.Plex.EXCLUDED.MutableColumns)
 
 	_, err := stmt.ExecContext(ctx, cs.DB)
 

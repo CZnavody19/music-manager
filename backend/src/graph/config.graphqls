@@ -2,6 +2,15 @@ input DiscordConfig {
     webhookURL: String!
 }
 
+input PlexConfig {
+    protocol: String!
+    host: String!
+    port: Int!
+    token: String!
+    libraryID: Int!
+}
+
 extend type Mutation {
     setDiscordConfig(config: DiscordConfig!): Boolean!
+    setPlexConfig(config: PlexConfig!): Boolean!
 }
