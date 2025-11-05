@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 export type FormActionResponse<T extends FieldValues> = {
     errors?: FieldErrors<T> | null;
+    message?: string;
 }
 
 export function useFormResponse<T extends FieldValues>(actionData?: FormActionResponse<T> | null) {
@@ -13,7 +14,7 @@ export function useFormResponse<T extends FieldValues>(actionData?: FormActionRe
         if (actionData.errors) {
             toast.error("There was an error submitting the form. Please check your input.", { richColors: true, description: actionData.errors.name?.message?.toString() });
         } else {
-            toast.success("Form submitted successfully.", { richColors: true });
+            toast.success(actionData.message ?? "Form submitted successfully.", { richColors: true });
         }
     }, [actionData]);
 }

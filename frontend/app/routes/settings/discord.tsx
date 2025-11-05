@@ -15,26 +15,48 @@ export function meta() {
 
 
 export async function action({ request }: Route.ActionArgs) {
-    const { errors, data } = await getValidatedFormData(request, resolver);
-
-    if (errors) {
-        return { errors };
-    }
-
     const { client } = await getGQLClient(request);
 
-    const { error } = await client.mutate({
-        mutation: gql`
-            mutation setDiscordConfig($config: DiscordConfigInput!) {
-                setDiscordConfig(config: $config)
-            }
-        `,
-        variables: {
-            config: data,
-        },
-    });
+    switch (request.method) {
+        case "POST":
+            const { errors, data } = await getValidatedFormData(request, resolver);
 
-    return { errors: error };
+            if (errors) {
+                return { errors };
+            }
+
+            const { error } = await client.mutate({
+                mutation: gql`
+                    mutation setDiscordConfig($config: DiscordConfigInput!) {
+                        setDiscordConfig(config: $config)
+                    }
+                `,
+                variables: {
+                    config: data,
+                },
+            });
+
+            return { errors: error };
+
+        case "PUT":
+            const body = await request.json();
+            if (body.action !== "test") {
+                return { errors: [{ message: "Invalid action" }] };
+            }
+
+            const { error: err } = await client.mutate({
+                mutation: gql`
+                    mutation sendTestDiscordMessage {
+                        sendTestDiscordMessage
+                    }
+                `,
+            });
+
+            return { errors: err, message: "Test message sent successfully." };
+
+        default:
+            return { errors: [{ message: "Invalid request method" }] };
+    }
 }
 
 export async function loader({ request }: Route.LoaderArgs) {

@@ -1,4 +1,4 @@
-import { Form } from "react-router";
+import { Form, useSubmit } from "react-router";
 import { Controller } from "react-hook-form";
 import { useRemixForm } from "remix-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,8 @@ export const resolver = zodResolver(DiscordSettingsSchema);
 export type formType = z.infer<typeof DiscordSettingsSchema>;
 
 export function DiscordConfigForm({ form }: { form: ReturnType<typeof useRemixForm<formType>> }) {
+    const submit = useSubmit();
+
     return (
         <Form className="px-6 py-4" onSubmit={form.handleSubmit} method="POST">
             <FieldSet>
@@ -30,8 +32,9 @@ export function DiscordConfigForm({ form }: { form: ReturnType<typeof useRemixFo
                                 )}
                             </Field>
                         )} />
-                    <Field orientation="horizontal">
+                    <Field orientation="horizontal" className="justify-between">
                         <Button type="submit">Submit</Button>
+                        <Button type="button" variant="outline" onClick={() => submit({ action: "test" }, { method: "PUT", encType: "application/json" })}>Send Test Message</Button>
                     </Field>
                 </FieldGroup>
             </FieldSet>
