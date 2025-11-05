@@ -10,6 +10,11 @@ type DiscordConfigInput struct {
 	WebhookURL string `json:"webhookURL"`
 }
 
+type LoginInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type Mutation struct {
 }
 

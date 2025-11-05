@@ -1,3 +1,5 @@
+directive @auth on FIELD_DEFINITION
+
 directive @discordEnabled on FIELD_DEFINITION
 directive @plexEnabled on FIELD_DEFINITION
 directive @youtubeEnabled on FIELD_DEFINITION

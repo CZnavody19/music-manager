@@ -43,6 +43,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	Auth           func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	DiscordEnabled func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	PlexEnabled    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	YoutubeEnabled func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
@@ -57,6 +58,8 @@ type ComplexityRoot struct {
 		EnableDiscord          func(childComplexity int, enable bool) int
 		EnablePlex             func(childComplexity int, enable bool) int
 		EnableYoutube          func(childComplexity int, enable bool) int
+		Login                  func(childComplexity int, input model.LoginInput) int
+		Logout                 func(childComplexity int) int
 		RefreshPlexLibrary     func(childComplexity int) int
 		SendTestDiscordMessage func(childComplexity int) int
 		SetDiscordConfig       func(childComplexity int, config model.DiscordConfigInput) int
@@ -85,6 +88,8 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	Login(ctx context.Context, input model.LoginInput) (string, error)
+	Logout(ctx context.Context) (bool, error)
 	SetDiscordConfig(ctx context.Context, config model.DiscordConfigInput) (bool, error)
 	SetPlexConfig(ctx context.Context, config model.PlexConfigInput) (bool, error)
 	EnableYoutube(ctx context.Context, enable bool) (bool, error)
@@ -158,6 +163,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.EnableYoutube(childComplexity, args["enable"].(bool)), true
+	case "Mutation.login":
+		if e.complexity.Mutation.Login == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_login_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
+	case "Mutation.logout":
+		if e.complexity.Mutation.Logout == nil {
+			break
+		}
+
+		return e.complexity.Mutation.Logout(childComplexity), true
 	case "Mutation.refreshPlexLibrary":
 		if e.complexity.Mutation.RefreshPlexLibrary == nil {
 			break
@@ -271,6 +293,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputDiscordConfigInput,
+		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputPlexConfigInput,
 	)
 	first := true
@@ -369,6 +392,15 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "../auth.graphqls", Input: `input LoginInput {
+    username: String!
+    password: String!
+}
+
+extend type Mutation {
+    login(input: LoginInput!): String!
+    logout: Boolean! @auth
+}`, BuiltIn: false},
 	{Name: "../config.graphqls", Input: `type DiscordConfig {
     webhookURL: String!
 }
@@ -394,15 +426,17 @@ input PlexConfigInput {
 }
 
 extend type Query {
-    getDiscordConfig: DiscordConfig!
-    getPlexConfig: PlexConfig!
+    getDiscordConfig: DiscordConfig! @auth
+    getPlexConfig: PlexConfig! @auth
 }
 
 extend type Mutation {
-    setDiscordConfig(config: DiscordConfigInput!): Boolean!
-    setPlexConfig(config: PlexConfigInput!): Boolean!
+    setDiscordConfig(config: DiscordConfigInput!): Boolean! @auth
+    setPlexConfig(config: PlexConfigInput!): Boolean! @auth
 }`, BuiltIn: false},
-	{Name: "../directives.graphqls", Input: `directive @discordEnabled on FIELD_DEFINITION
+	{Name: "../directives.graphqls", Input: `directive @auth on FIELD_DEFINITION
+
+directive @discordEnabled on FIELD_DEFINITION
 directive @plexEnabled on FIELD_DEFINITION
 directive @youtubeEnabled on FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `type Query
@@ -415,16 +449,16 @@ type Mutation`, BuiltIn: false},
 }
 
 extend type Query {
-    getServiceStatus: ServiceStatus!
+    getServiceStatus: ServiceStatus! @auth
 }
 
 extend type Mutation {
-    enableYoutube(enable: Boolean!): Boolean!
-    enableDiscord(enable: Boolean!): Boolean!
-    enablePlex(enable: Boolean!): Boolean!
+    enableYoutube(enable: Boolean!): Boolean! @auth
+    enableDiscord(enable: Boolean!): Boolean! @auth
+    enablePlex(enable: Boolean!): Boolean! @auth
 
-    sendTestDiscordMessage: Boolean! @discordEnabled
-    refreshPlexLibrary: Boolean! @plexEnabled
+    sendTestDiscordMessage: Boolean! @auth @discordEnabled
+    refreshPlexLibrary: Boolean! @auth @plexEnabled
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -463,6 +497,17 @@ func (ec *executionContext) field_Mutation_enableYoutube_args(ctx context.Contex
 		return nil, err
 	}
 	args["enable"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNLoginInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐLoginInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -580,6 +625,89 @@ func (ec *executionContext) fieldContext_DiscordConfig_webhookURL(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_login,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().Login(ctx, fc.Args["input"].(model.LoginInput))
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_logout(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_logout,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().Logout(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_logout(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_setDiscordConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -590,7 +718,20 @@ func (ec *executionContext) _Mutation_setDiscordConfig(ctx context.Context, fiel
 			fc := graphql.GetFieldContext(ctx)
 			return ec.resolvers.Mutation().SetDiscordConfig(ctx, fc.Args["config"].(model.DiscordConfigInput))
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNBoolean2bool,
 		true,
 		true,
@@ -631,7 +772,20 @@ func (ec *executionContext) _Mutation_setPlexConfig(ctx context.Context, field g
 			fc := graphql.GetFieldContext(ctx)
 			return ec.resolvers.Mutation().SetPlexConfig(ctx, fc.Args["config"].(model.PlexConfigInput))
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNBoolean2bool,
 		true,
 		true,
@@ -672,7 +826,20 @@ func (ec *executionContext) _Mutation_enableYoutube(ctx context.Context, field g
 			fc := graphql.GetFieldContext(ctx)
 			return ec.resolvers.Mutation().EnableYoutube(ctx, fc.Args["enable"].(bool))
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNBoolean2bool,
 		true,
 		true,
@@ -713,7 +880,20 @@ func (ec *executionContext) _Mutation_enableDiscord(ctx context.Context, field g
 			fc := graphql.GetFieldContext(ctx)
 			return ec.resolvers.Mutation().EnableDiscord(ctx, fc.Args["enable"].(bool))
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNBoolean2bool,
 		true,
 		true,
@@ -754,7 +934,20 @@ func (ec *executionContext) _Mutation_enablePlex(ctx context.Context, field grap
 			fc := graphql.GetFieldContext(ctx)
 			return ec.resolvers.Mutation().EnablePlex(ctx, fc.Args["enable"].(bool))
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNBoolean2bool,
 		true,
 		true,
@@ -798,14 +991,21 @@ func (ec *executionContext) _Mutation_sendTestDiscordMessage(ctx context.Context
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
 				if ec.directives.DiscordEnabled == nil {
 					var zeroVal bool
 					return zeroVal, errors.New("directive discordEnabled is not implemented")
 				}
-				return ec.directives.DiscordEnabled(ctx, nil, directive0)
+				return ec.directives.DiscordEnabled(ctx, nil, directive1)
 			}
 
-			next = directive1
+			next = directive2
 			return next
 		},
 		ec.marshalNBoolean2bool,
@@ -840,14 +1040,21 @@ func (ec *executionContext) _Mutation_refreshPlexLibrary(ctx context.Context, fi
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
 				if ec.directives.PlexEnabled == nil {
 					var zeroVal bool
 					return zeroVal, errors.New("directive plexEnabled is not implemented")
 				}
-				return ec.directives.PlexEnabled(ctx, nil, directive0)
+				return ec.directives.PlexEnabled(ctx, nil, directive1)
 			}
 
-			next = directive1
+			next = directive2
 			return next
 		},
 		ec.marshalNBoolean2bool,
@@ -1023,7 +1230,20 @@ func (ec *executionContext) _Query_getDiscordConfig(ctx context.Context, field g
 		func(ctx context.Context) (any, error) {
 			return ec.resolvers.Query().GetDiscordConfig(ctx)
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal *model.DiscordConfig
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNDiscordConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfig,
 		true,
 		true,
@@ -1056,7 +1276,20 @@ func (ec *executionContext) _Query_getPlexConfig(ctx context.Context, field grap
 		func(ctx context.Context) (any, error) {
 			return ec.resolvers.Query().GetPlexConfig(ctx)
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal *model.PlexConfig
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNPlexConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig,
 		true,
 		true,
@@ -1097,7 +1330,20 @@ func (ec *executionContext) _Query_getServiceStatus(ctx context.Context, field g
 		func(ctx context.Context) (any, error) {
 			return ec.resolvers.Query().GetServiceStatus(ctx)
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal *model.ServiceStatus
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNServiceStatus2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐServiceStatus,
 		true,
 		true,
@@ -2793,6 +3039,40 @@ func (ec *executionContext) unmarshalInputDiscordConfigInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj any) (model.LoginInput, error) {
+	var it model.LoginInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"username", "password"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "username":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Username = data
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPlexConfigInput(ctx context.Context, obj any) (model.PlexConfigInput, error) {
 	var it model.PlexConfigInput
 	asMap := map[string]any{}
@@ -2914,6 +3194,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "login":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_login(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logout":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logout(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "setDiscordConfig":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setDiscordConfig(ctx, field)
@@ -3594,6 +3888,11 @@ func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNLoginInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
+	res, err := ec.unmarshalInputLoginInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNPlexConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig(ctx context.Context, sel ast.SelectionSet, v model.PlexConfig) graphql.Marshaler {

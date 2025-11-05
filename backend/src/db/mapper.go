@@ -37,3 +37,17 @@ func (m *Mapper) MapPlexConfig(input *model.Plex) *domain.PlexConfig {
 		LibraryID: int64(input.LibraryID),
 	}
 }
+
+func (m *Mapper) MapGeneralConfig(input *model.General) *domain.GeneralConfig {
+	return &domain.GeneralConfig{
+		DownloadPath: input.DownloadPath,
+		TempPath:     input.TempPath,
+	}
+}
+
+func (m *Mapper) MapAuthConfig(input *model.Auth) *domain.AuthConfig {
+	return &domain.AuthConfig{
+		Username:     input.Username,
+		PasswordHash: input.PasswordHash,
+	}
+}

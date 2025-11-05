@@ -14,6 +14,7 @@ type ServerConfig struct {
 	DebugEnable         bool
 	PlaygroundEnable    bool
 	IntrospectionEnable bool
+	TokenCheckEnable    bool
 }
 
 func loadServerConfig() ServerConfig {

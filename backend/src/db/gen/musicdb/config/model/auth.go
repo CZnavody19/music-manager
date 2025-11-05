@@ -7,8 +7,8 @@
 
 package model
 
-type General struct {
+type Auth struct {
 	Active       bool `sql:"primary_key"`
-	DownloadPath string
-	TempPath     string
+	Username     string
+	PasswordHash string
 }

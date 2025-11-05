@@ -23,11 +23,11 @@ input PlexConfigInput {
 }
 
 extend type Query {
-    getDiscordConfig: DiscordConfig!
-    getPlexConfig: PlexConfig!
+    getDiscordConfig: DiscordConfig! @auth
+    getPlexConfig: PlexConfig! @auth
 }
 
 extend type Mutation {
-    setDiscordConfig(config: DiscordConfigInput!): Boolean!
-    setPlexConfig(config: PlexConfigInput!): Boolean!
+    setDiscordConfig(config: DiscordConfigInput!): Boolean! @auth
+    setPlexConfig(config: PlexConfigInput!): Boolean! @auth
 }

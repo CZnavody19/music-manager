@@ -17,7 +17,7 @@ type generalTable struct {
 	postgres.Table
 
 	// Columns
-	Enabled      postgres.ColumnBool
+	Active       postgres.ColumnBool
 	DownloadPath postgres.ColumnString
 	TempPath     postgres.ColumnString
 
@@ -61,10 +61,10 @@ func newGeneralTable(schemaName, tableName, alias string) *GeneralTable {
 
 func newGeneralTableImpl(schemaName, tableName, alias string) generalTable {
 	var (
-		EnabledColumn      = postgres.BoolColumn("enabled")
+		ActiveColumn       = postgres.BoolColumn("active")
 		DownloadPathColumn = postgres.StringColumn("download_path")
 		TempPathColumn     = postgres.StringColumn("temp_path")
-		allColumns         = postgres.ColumnList{EnabledColumn, DownloadPathColumn, TempPathColumn}
+		allColumns         = postgres.ColumnList{ActiveColumn, DownloadPathColumn, TempPathColumn}
 		mutableColumns     = postgres.ColumnList{DownloadPathColumn, TempPathColumn}
 		defaultColumns     = postgres.ColumnList{}
 	)
@@ -73,7 +73,7 @@ func newGeneralTableImpl(schemaName, tableName, alias string) generalTable {
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		Enabled:      EnabledColumn,
+		Active:       ActiveColumn,
 		DownloadPath: DownloadPathColumn,
 		TempPath:     TempPathColumn,
 

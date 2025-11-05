@@ -9,3 +9,4 @@ ReadTimeout: 5s
 ShutdownTimeout: 5s
 PlaygroundEnable: true
 IntrospectionEnable: true
+TokenCheckEnable: false

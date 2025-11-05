@@ -27,3 +27,10 @@ func (im *InputMapper) MapPlexConfigInput(input model.PlexConfigInput) *domain.P
 		LibraryID: input.LibraryID,
 	}
 }
+
+func (im *InputMapper) MapLoginInput(input model.LoginInput) *domain.Credentials {
+	return &domain.Credentials{
+		Username: input.Username,
+		Password: input.Password,
+	}
+}

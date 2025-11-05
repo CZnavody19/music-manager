@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/CZnavody19/music-manager/src/internal/auth"
 )
 
 // THIS IS A CUSTOM FILE THAT WILL NOT BE REGENERATED
@@ -18,6 +19,20 @@ func NewDirectives(resolver *Resolver) *Directives {
 	return &Directives{
 		resolver: resolver,
 	}
+}
+
+func (d *Directives) Auth(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+	token, ok := ctx.Value(auth.TokenCtxKey).(string)
+	if !ok || token == "" {
+		return nil, fmt.Errorf("unauthenticated: no valid auth token provided")
+	}
+
+	err = d.resolver.Auth.CheckToken(ctx, token)
+	if err != nil {
+		return nil, fmt.Errorf("unauthenticated: %v", err)
+	}
+
+	return next(ctx)
 }
 
 func (d *Directives) DiscordEnabled(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {

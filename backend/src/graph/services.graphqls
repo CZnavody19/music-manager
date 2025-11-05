@@ -5,14 +5,14 @@ type ServiceStatus {
 }
 
 extend type Query {
-    getServiceStatus: ServiceStatus!
+    getServiceStatus: ServiceStatus! @auth
 }
 
 extend type Mutation {
-    enableYoutube(enable: Boolean!): Boolean!
-    enableDiscord(enable: Boolean!): Boolean!
-    enablePlex(enable: Boolean!): Boolean!
+    enableYoutube(enable: Boolean!): Boolean! @auth
+    enableDiscord(enable: Boolean!): Boolean! @auth
+    enablePlex(enable: Boolean!): Boolean! @auth
 
-    sendTestDiscordMessage: Boolean! @discordEnabled
-    refreshPlexLibrary: Boolean! @plexEnabled
+    sendTestDiscordMessage: Boolean! @auth @discordEnabled
+    refreshPlexLibrary: Boolean! @auth @plexEnabled
 }

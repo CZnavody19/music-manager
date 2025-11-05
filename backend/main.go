@@ -93,6 +93,7 @@ func setupService(configuration *config.Config) (*ServerComponents, error) {
 	setup.SetupPresenters(srv)
 
 	router := mux.NewRouter()
+	router.Use(resolver.Auth.Middleware())
 	router.Handle("/", srv)
 	if configuration.Server.PlaygroundEnable {
 		router.Handle("/playground", playground.Handler("GraphQL playground", "/"))

@@ -10,6 +10,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/graph"
 	"github.com/CZnavody19/music-manager/src/graph/generated"
 	"github.com/CZnavody19/music-manager/src/http"
+	"github.com/CZnavody19/music-manager/src/internal/auth"
 	"github.com/CZnavody19/music-manager/src/internal/discord"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
@@ -19,6 +20,11 @@ func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) 
 	dbMapper := db.NewMapper()
 
 	configStore := configStore.NewConfigStore(dbConn, dbMapper)
+
+	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
+	if err != nil {
+		return nil, err
+	}
 
 	yt, err := youtube.NewYouTube(configStore)
 	if err != nil {
@@ -43,6 +49,7 @@ func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) 
 	return &graph.Resolver{
 		Mapper:      graphMapper,
 		InputMapper: graphInputMapper,
+		Auth:        auth,
 		YouTube:     yt,
 		Discord:     dsc,
 		Plex:        plx,
@@ -52,6 +59,8 @@ func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) 
 }
 
 func SetupDirectives(config *generated.Config, directives *graph.Directives) {
+	config.Directives.Auth = directives.Auth
+
 	config.Directives.DiscordEnabled = directives.DiscordEnabled
 	config.Directives.PlexEnabled = directives.PlexEnabled
 	config.Directives.YoutubeEnabled = directives.YoutubeEnabled
