@@ -7,5 +7,6 @@ export default [
         index("routes/settings/general.tsx"),
         route("youtube", "routes/settings/youtube.tsx"),
         route("discord", "routes/settings/discord.tsx"),
+        route("plex", "routes/settings/plex.tsx"),
     ]),
 ] satisfies RouteConfig;

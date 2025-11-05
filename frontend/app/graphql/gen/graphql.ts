@@ -16,6 +16,11 @@ export type Scalars = {
 };
 
 export type DiscordConfig = {
+  __typename?: 'DiscordConfig';
+  webhookURL: Scalars['String']['output'];
+};
+
+export type DiscordConfigInput = {
   webhookURL: Scalars['String']['input'];
 };
 
@@ -47,15 +52,24 @@ export type MutationEnableYoutubeArgs = {
 
 
 export type MutationSetDiscordConfigArgs = {
-  config: DiscordConfig;
+  config: DiscordConfigInput;
 };
 
 
 export type MutationSetPlexConfigArgs = {
-  config: PlexConfig;
+  config: PlexConfigInput;
 };
 
 export type PlexConfig = {
+  __typename?: 'PlexConfig';
+  host: Scalars['String']['output'];
+  libraryID: Scalars['Int']['output'];
+  port: Scalars['Int']['output'];
+  protocol: Scalars['String']['output'];
+  token: Scalars['String']['output'];
+};
+
+export type PlexConfigInput = {
   host: Scalars['String']['input'];
   libraryID: Scalars['Int']['input'];
   port: Scalars['Int']['input'];
@@ -65,6 +79,8 @@ export type PlexConfig = {
 
 export type Query = {
   __typename?: 'Query';
+  getDiscordConfig: DiscordConfig;
+  getPlexConfig: PlexConfig;
   getServiceStatus: ServiceStatus;
 };
 

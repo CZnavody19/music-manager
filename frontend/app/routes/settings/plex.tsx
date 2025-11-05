@@ -1,18 +1,17 @@
-import type { Route } from "./+types/discord";
+import type { Route } from "./+types/plex";
 import { useFormResponse } from "~/hooks/use-form-response";
 import { getValidatedFormData, useRemixForm } from "remix-hook-form";
-import { DiscordConfigForm, resolver, type formType } from "~/components/forms/discord";
+import { PlexConfigForm, resolver, type formType } from "~/components/forms/plex";
 import { getGQLClient } from "~/.server/apollo";
 import { gql } from "@apollo/client";
 import type { Query } from "~/graphql/gen/graphql";
 
 export function meta() {
     return [
-        { title: "Discord - Settings - Music Manager" },
+        { title: "Plex - Settings - Music Manager" },
         { name: "description", content: "Manage your music collection with ease." },
     ];
 }
-
 
 export async function action({ request }: Route.ActionArgs) {
     const { errors, data } = await getValidatedFormData(request, resolver);
@@ -25,8 +24,8 @@ export async function action({ request }: Route.ActionArgs) {
 
     const { error } = await client.mutate({
         mutation: gql`
-            mutation setDiscordConfig($config: DiscordConfigInput!) {
-                setDiscordConfig(config: $config)
+            mutation setPlexConfig($config: PlexConfigInput!) {
+                setPlexConfig(config: $config)
             }
         `,
         variables: {
@@ -42,15 +41,19 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     const { data, error } = await client.query<Query>({
         query: gql`
-            query getDiscordConfig {
-                getDiscordConfig {
-                    webhookURL
+            query getPlexConfig {
+                getPlexConfig {
+                    protocol
+                    host
+                    port
+                    token
+                    libraryID
                 }
             }
         `,
     });
 
-    return { errors: error, data: data?.getDiscordConfig };
+    return { errors: error, data: data?.getPlexConfig };
 }
 
 export default function Page({ loaderData, actionData }: Route.ComponentProps) {
@@ -61,6 +64,6 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
     useFormResponse<typeof resolver>(actionData);
 
     return (
-        <DiscordConfigForm form={form} />
+        <PlexConfigForm form={form} />
     )
 }
