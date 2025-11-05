@@ -15,22 +15,62 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type DiscordConfig = {
+  webhookURL: Scalars['String']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
-  youtubeEnable: Scalars['Boolean']['output'];
+  enableDiscord: Scalars['Boolean']['output'];
+  enablePlex: Scalars['Boolean']['output'];
+  enableYoutube: Scalars['Boolean']['output'];
+  refreshPlexLibrary: Scalars['Boolean']['output'];
+  sendTestDiscordMessage: Scalars['Boolean']['output'];
+  setDiscordConfig: Scalars['Boolean']['output'];
+  setPlexConfig: Scalars['Boolean']['output'];
 };
 
 
-export type MutationYoutubeEnableArgs = {
+export type MutationEnableDiscordArgs = {
   enable: Scalars['Boolean']['input'];
+};
+
+
+export type MutationEnablePlexArgs = {
+  enable: Scalars['Boolean']['input'];
+};
+
+
+export type MutationEnableYoutubeArgs = {
+  enable: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetDiscordConfigArgs = {
+  config: DiscordConfig;
+};
+
+
+export type MutationSetPlexConfigArgs = {
+  config: PlexConfig;
+};
+
+export type PlexConfig = {
+  host: Scalars['String']['input'];
+  libraryID: Scalars['Int']['input'];
+  port: Scalars['Int']['input'];
+  protocol: Scalars['String']['input'];
+  token: Scalars['String']['input'];
 };
 
 export type Query = {
   __typename?: 'Query';
-  getStatus: Status;
+  getServiceStatus: ServiceStatus;
 };
 
-export type Status = {
-  __typename?: 'Status';
-  youtubeActive: Scalars['Boolean']['output'];
+export type ServiceStatus = {
+  __typename?: 'ServiceStatus';
+  discord: Scalars['Boolean']['output'];
+  plex: Scalars['Boolean']['output'];
+  youtube: Scalars['Boolean']['output'];
 };
