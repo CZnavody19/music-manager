@@ -1,8 +1,8 @@
-import { getGQLClient } from "~/.server/apollo";
+// import { getGQLClient } from "~/.server/apollo";
 import type { Route } from "./+types/dashboard";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card"
-import { gql } from "@apollo/client";
-import type { Query } from "~/graphql/gen/graphql";
+// import { gql } from "@apollo/client";
+// import type { Query } from "~/graphql/gen/graphql";
 
 export function meta() {
 	return [
@@ -12,19 +12,20 @@ export function meta() {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-	const { client } = await getGQLClient(request);
+	// const { client } = await getGQLClient(request);
 
-	const { data } = await client.query<Query>({
-		query: gql`
-			query getStatus {
-				getStatus {
-					youtubeActive
-				}
-			}
-		`,
-	});
+	// const { data } = await client.query<Query>({
+	// 	query: gql`
+	// 		query getStatus {
+	// 			getStatus {
+	// 				youtubeActive
+	// 			}
+	// 		}
+	// 	`,
+	// });
 
-	return data?.getStatus;
+	// return data?.getStatus;
+	return null
 }
 
 export default function Page({ loaderData }: Route.ComponentProps) {
@@ -37,7 +38,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 					<CardAction>Card Action</CardAction>
 				</CardHeader>
 				<CardContent>
-					<p>{loaderData?.youtubeActive ? "YouTube is active" : "YouTube is inactive"}</p>
+					{/* <p>{loaderData?.youtubeActive ? "YouTube is active" : "YouTube is inactive"}</p> */}
 				</CardContent>
 				<CardFooter>
 					<p>Card Footer</p>
