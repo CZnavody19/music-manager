@@ -24,15 +24,28 @@ export type DiscordConfigInput = {
   webhookURL: Scalars['String']['input'];
 };
 
+export type LoginInput = {
+  password: Scalars['String']['input'];
+  username: Scalars['String']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  changeLogin: Scalars['Boolean']['output'];
   enableDiscord: Scalars['Boolean']['output'];
   enablePlex: Scalars['Boolean']['output'];
   enableYoutube: Scalars['Boolean']['output'];
+  login: Scalars['String']['output'];
+  logout: Scalars['Boolean']['output'];
   refreshPlexLibrary: Scalars['Boolean']['output'];
   sendTestDiscordMessage: Scalars['Boolean']['output'];
   setDiscordConfig: Scalars['Boolean']['output'];
   setPlexConfig: Scalars['Boolean']['output'];
+};
+
+
+export type MutationChangeLoginArgs = {
+  input: LoginInput;
 };
 
 
@@ -48,6 +61,11 @@ export type MutationEnablePlexArgs = {
 
 export type MutationEnableYoutubeArgs = {
   enable: Scalars['Boolean']['input'];
+};
+
+
+export type MutationLoginArgs = {
+  input: LoginInput;
 };
 
 

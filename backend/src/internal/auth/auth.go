@@ -36,6 +36,10 @@ func NewAuth(cs *config.ConfigStore, enabled bool) (*Auth, error) {
 }
 
 func hashPassword(password string) (string, error) {
+	if len(password) < 8 {
+		return "", fmt.Errorf("password must be at least 8 characters long")
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 	if err != nil {
 		return "", err
@@ -70,6 +74,25 @@ func (a *Auth) Middleware() mux.MiddlewareFunc {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func (a *Auth) ChangeLogin(ctx context.Context, credentials *domain.Credentials) error {
+	hash, err := hashPassword(credentials.Password)
+	if err != nil {
+		return err
+	}
+
+	config := &domain.AuthConfig{
+		Username:     credentials.Username,
+		PasswordHash: hash,
+	}
+
+	err = a.configStore.SaveAuthConfig(ctx, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Auth) Login(ctx context.Context, credentials *domain.Credentials) (string, error) {

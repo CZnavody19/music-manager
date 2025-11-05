@@ -31,3 +31,15 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 
 	return true, nil
 }
+
+// ChangeLogin is the resolver for the changeLogin field.
+func (r *mutationResolver) ChangeLogin(ctx context.Context, input model.LoginInput) (bool, error) {
+	in := r.InputMapper.MapLoginInput(input)
+
+	err := r.Auth.ChangeLogin(ctx, in)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}

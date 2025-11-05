@@ -55,6 +55,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		ChangeLogin            func(childComplexity int, input model.LoginInput) int
 		EnableDiscord          func(childComplexity int, enable bool) int
 		EnablePlex             func(childComplexity int, enable bool) int
 		EnableYoutube          func(childComplexity int, enable bool) int
@@ -90,6 +91,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	Login(ctx context.Context, input model.LoginInput) (string, error)
 	Logout(ctx context.Context) (bool, error)
+	ChangeLogin(ctx context.Context, input model.LoginInput) (bool, error)
 	SetDiscordConfig(ctx context.Context, config model.DiscordConfigInput) (bool, error)
 	SetPlexConfig(ctx context.Context, config model.PlexConfigInput) (bool, error)
 	EnableYoutube(ctx context.Context, enable bool) (bool, error)
@@ -130,6 +132,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DiscordConfig.WebhookURL(childComplexity), true
 
+	case "Mutation.changeLogin":
+		if e.complexity.Mutation.ChangeLogin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_changeLogin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ChangeLogin(childComplexity, args["input"].(model.LoginInput)), true
 	case "Mutation.enableDiscord":
 		if e.complexity.Mutation.EnableDiscord == nil {
 			break
@@ -400,6 +413,7 @@ var sources = []*ast.Source{
 extend type Mutation {
     login(input: LoginInput!): String!
     logout: Boolean! @auth
+    changeLogin(input: LoginInput!): Boolean! @auth
 }`, BuiltIn: false},
 	{Name: "../config.graphqls", Input: `type DiscordConfig {
     webhookURL: String!
@@ -466,6 +480,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_changeLogin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNLoginInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐLoginInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_enableDiscord_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
@@ -704,6 +729,60 @@ func (ec *executionContext) fieldContext_Mutation_logout(_ context.Context, fiel
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_changeLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_changeLogin,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ChangeLogin(ctx, fc.Args["input"].(model.LoginInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_changeLogin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_changeLogin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3204,6 +3283,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "logout":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_logout(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "changeLogin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_changeLogin(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

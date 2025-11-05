@@ -1,4 +1,4 @@
-import { createCookieSessionStorage } from "react-router";
+import { createCookieSessionStorage, type Session } from "react-router";
 
 export const sessionStorage = createCookieSessionStorage({
     cookie: {
@@ -11,4 +11,16 @@ export const sessionStorage = createCookieSessionStorage({
     },
 });
 
-export const { commitSession, destroySession, getSession } = sessionStorage;
+export const { commitSession, destroySession, getSession: _getSession } = sessionStorage;
+
+export async function getSession(request: Request) {
+    return await _getSession(request.headers.get("Cookie"));
+}
+
+export async function saveSession(session: Session) {
+    return {
+        headers: {
+            "Set-Cookie": await commitSession(session),
+        },
+    }
+}

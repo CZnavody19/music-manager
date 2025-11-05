@@ -11,3 +11,8 @@ export const PlexSettingsSchema = z.object({
     token: z.string().min(1, "Token is required."),
     libraryID: z.number("Library ID must be a number."),
 });
+
+export const AuthSchema = z.object({
+    username: z.string().min(1, "Username is required."),
+    password: z.string().min(8, "Password must be at least 8 characters long."),
+});

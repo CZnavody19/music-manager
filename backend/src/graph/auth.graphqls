@@ -6,4 +6,5 @@ input LoginInput {
 extend type Mutation {
     login(input: LoginInput!): String!
     logout: Boolean! @auth
+    changeLogin(input: LoginInput!): Boolean! @auth
 }

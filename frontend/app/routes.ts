@@ -9,4 +9,7 @@ export default [
         route("discord", "routes/settings/discord.tsx"),
         route("plex", "routes/settings/plex.tsx"),
     ]),
+
+    route("login", "routes/auth/login.tsx"),
+    route("logout", "routes/auth/logout.ts"),
 ] satisfies RouteConfig;

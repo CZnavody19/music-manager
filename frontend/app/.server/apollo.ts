@@ -1,9 +1,9 @@
 import type { Session } from "react-router";
-import { getSession } from "~/.server/session";
+import { _getSession } from "~/.server/session";
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 
 export const getGQLClient = async (request: Request) => {
-    const session = await getSession(request.headers.get("Cookie"));
+    const session = await _getSession(request.headers.get("Cookie"));
 
     return { client: await getGQLClientFromSession(session), session };
 }
