@@ -6,5 +6,6 @@ export default [
     route("settings", "layouts/settings.tsx", [
         index("routes/settings/general.tsx"),
         route("youtube", "routes/settings/youtube.tsx"),
+        route("discord", "routes/settings/discord.tsx"),
     ]),
 ] satisfies RouteConfig;

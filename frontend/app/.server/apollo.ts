@@ -29,6 +29,9 @@ export const getGQLClientFromSession = async (session: Session) => {
                 fetchPolicy: 'no-cache',
                 errorPolicy: 'all',
             },
+            mutate: {
+                errorPolicy: 'all',
+            },
         },
     });
 }
