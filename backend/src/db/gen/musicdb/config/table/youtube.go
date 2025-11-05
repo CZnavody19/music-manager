@@ -17,9 +17,10 @@ type youtubeTable struct {
 	postgres.Table
 
 	// Columns
-	Enabled postgres.ColumnBool
+	Active  postgres.ColumnBool
 	OAuth   postgres.ColumnBytea
 	Token   postgres.ColumnBytea
+	Enabled postgres.ColumnBool
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -61,21 +62,23 @@ func newYoutubeTable(schemaName, tableName, alias string) *YoutubeTable {
 
 func newYoutubeTableImpl(schemaName, tableName, alias string) youtubeTable {
 	var (
-		EnabledColumn  = postgres.BoolColumn("enabled")
+		ActiveColumn   = postgres.BoolColumn("active")
 		OAuthColumn    = postgres.ByteaColumn("oauth")
 		TokenColumn    = postgres.ByteaColumn("token")
-		allColumns     = postgres.ColumnList{EnabledColumn, OAuthColumn, TokenColumn}
-		mutableColumns = postgres.ColumnList{OAuthColumn, TokenColumn}
-		defaultColumns = postgres.ColumnList{}
+		EnabledColumn  = postgres.BoolColumn("enabled")
+		allColumns     = postgres.ColumnList{ActiveColumn, OAuthColumn, TokenColumn, EnabledColumn}
+		mutableColumns = postgres.ColumnList{OAuthColumn, TokenColumn, EnabledColumn}
+		defaultColumns = postgres.ColumnList{EnabledColumn}
 	)
 
 	return youtubeTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		Enabled: EnabledColumn,
+		Active:  ActiveColumn,
 		OAuth:   OAuthColumn,
 		Token:   TokenColumn,
+		Enabled: EnabledColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

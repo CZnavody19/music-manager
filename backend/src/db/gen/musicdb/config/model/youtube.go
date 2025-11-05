@@ -8,7 +8,8 @@
 package model
 
 type Youtube struct {
-	Enabled bool `sql:"primary_key"`
+	Active  bool `sql:"primary_key"`
 	OAuth   []byte
 	Token   []byte
+	Enabled bool
 }

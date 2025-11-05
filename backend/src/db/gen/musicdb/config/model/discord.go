@@ -8,6 +8,7 @@
 package model
 
 type Discord struct {
-	Enabled    bool `sql:"primary_key"`
+	Active     bool `sql:"primary_key"`
 	WebhookURL string
+	Enabled    bool
 }

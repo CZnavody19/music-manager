@@ -1,6 +1,7 @@
 package domain
 
 type DiscordConfig struct {
+	Enabled    bool
 	WebhookURL string
 }
 

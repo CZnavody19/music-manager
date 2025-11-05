@@ -59,7 +59,7 @@ func NewYouTube(cs *config.ConfigStore) (*YouTube, error) {
 	}
 
 	enabled := false
-	if service != nil {
+	if service != nil && config.Enabled {
 		enabled = true
 	}
 
@@ -85,6 +85,11 @@ func (yt *YouTube) Enable(ctx context.Context) error {
 		return err
 	}
 
+	err = yt.configStore.SetYoutubeEnabled(ctx, true)
+	if err != nil {
+		return err
+	}
+
 	yt.yt = service
 	yt.enabled = true
 
@@ -92,6 +97,11 @@ func (yt *YouTube) Enable(ctx context.Context) error {
 }
 
 func (yt *YouTube) Disable(ctx context.Context) error {
+	err := yt.configStore.SetYoutubeEnabled(ctx, false)
+	if err != nil {
+		return err
+	}
+
 	yt.yt = nil
 	yt.enabled = false
 

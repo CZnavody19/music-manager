@@ -14,19 +14,22 @@ func NewMapper() *Mapper {
 
 func (m *Mapper) MapYouTubeConfig(input *model.Youtube) *domain.YouTubeConfig {
 	return &domain.YouTubeConfig{
-		OAuth: input.OAuth,
-		Token: input.Token,
+		Enabled: input.Enabled,
+		OAuth:   input.OAuth,
+		Token:   input.Token,
 	}
 }
 
 func (m *Mapper) MapDiscordConfig(input *model.Discord) *domain.DiscordConfig {
 	return &domain.DiscordConfig{
+		Enabled:    input.Enabled,
 		WebhookURL: input.WebhookURL,
 	}
 }
 
 func (m *Mapper) MapPlexConfig(input *model.Plex) *domain.PlexConfig {
 	return &domain.PlexConfig{
+		Enabled:   input.Enabled,
 		Protocol:  input.Protocol,
 		Host:      input.Host,
 		Port:      int64(input.Port),

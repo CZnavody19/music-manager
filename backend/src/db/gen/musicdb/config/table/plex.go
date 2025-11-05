@@ -17,12 +17,13 @@ type plexTable struct {
 	postgres.Table
 
 	// Columns
-	Enabled   postgres.ColumnBool
+	Active    postgres.ColumnBool
 	Protocol  postgres.ColumnString
 	Host      postgres.ColumnString
 	Port      postgres.ColumnInteger
 	Token     postgres.ColumnString
 	LibraryID postgres.ColumnInteger
+	Enabled   postgres.ColumnBool
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -64,27 +65,29 @@ func newPlexTable(schemaName, tableName, alias string) *PlexTable {
 
 func newPlexTableImpl(schemaName, tableName, alias string) plexTable {
 	var (
-		EnabledColumn   = postgres.BoolColumn("enabled")
+		ActiveColumn    = postgres.BoolColumn("active")
 		ProtocolColumn  = postgres.StringColumn("protocol")
 		HostColumn      = postgres.StringColumn("host")
 		PortColumn      = postgres.IntegerColumn("port")
 		TokenColumn     = postgres.StringColumn("token")
 		LibraryIDColumn = postgres.IntegerColumn("library_id")
-		allColumns      = postgres.ColumnList{EnabledColumn, ProtocolColumn, HostColumn, PortColumn, TokenColumn, LibraryIDColumn}
-		mutableColumns  = postgres.ColumnList{ProtocolColumn, HostColumn, PortColumn, TokenColumn, LibraryIDColumn}
-		defaultColumns  = postgres.ColumnList{}
+		EnabledColumn   = postgres.BoolColumn("enabled")
+		allColumns      = postgres.ColumnList{ActiveColumn, ProtocolColumn, HostColumn, PortColumn, TokenColumn, LibraryIDColumn, EnabledColumn}
+		mutableColumns  = postgres.ColumnList{ProtocolColumn, HostColumn, PortColumn, TokenColumn, LibraryIDColumn, EnabledColumn}
+		defaultColumns  = postgres.ColumnList{EnabledColumn}
 	)
 
 	return plexTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		Enabled:   EnabledColumn,
+		Active:    ActiveColumn,
 		Protocol:  ProtocolColumn,
 		Host:      HostColumn,
 		Port:      PortColumn,
 		Token:     TokenColumn,
 		LibraryID: LibraryIDColumn,
+		Enabled:   EnabledColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

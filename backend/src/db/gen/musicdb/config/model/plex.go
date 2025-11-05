@@ -8,10 +8,11 @@
 package model
 
 type Plex struct {
-	Enabled   bool `sql:"primary_key"`
+	Active    bool `sql:"primary_key"`
 	Protocol  string
 	Host      string
 	Port      int32
 	Token     string
 	LibraryID int32
+	Enabled   bool
 }

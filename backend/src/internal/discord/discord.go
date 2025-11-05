@@ -28,7 +28,7 @@ func NewDiscord(cs *config.ConfigStore) (*Discord, error) {
 
 	var url *string
 	enabled := false
-	if config != nil {
+	if config != nil && config.Enabled {
 		url = &config.WebhookURL
 		enabled = true
 	}
@@ -50,12 +50,22 @@ func (d *Discord) Enable(ctx context.Context) error {
 		return err
 	}
 
+	err = d.configStore.SetDiscordEnabled(ctx, true)
+	if err != nil {
+		return err
+	}
+
 	d.webhookURL = &config.WebhookURL
 	d.enabled = true
 	return nil
 }
 
 func (d *Discord) Disable(ctx context.Context) error {
+	err := d.configStore.SetDiscordEnabled(ctx, false)
+	if err != nil {
+		return err
+	}
+
 	d.webhookURL = nil
 	d.enabled = false
 	return nil

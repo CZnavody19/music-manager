@@ -1,6 +1,7 @@
 package domain
 
 type YouTubeConfig struct {
-	OAuth []byte
-	Token []byte
+	Enabled bool
+	OAuth   []byte
+	Token   []byte
 }

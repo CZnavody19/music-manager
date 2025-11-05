@@ -25,7 +25,7 @@ func NewPlex(cs *config.ConfigStore) (*Plex, error) {
 	}
 
 	enabled := false
-	if config != nil {
+	if config != nil && config.Enabled {
 		enabled = true
 	}
 
@@ -46,12 +46,22 @@ func (p *Plex) Enable(ctx context.Context) error {
 		return err
 	}
 
+	err = p.configStore.SetPlexEnabled(ctx, true)
+	if err != nil {
+		return err
+	}
+
 	p.config = config
 	p.enabled = true
 	return nil
 }
 
 func (p *Plex) Disable(ctx context.Context) error {
+	err := p.configStore.SetPlexEnabled(ctx, false)
+	if err != nil {
+		return err
+	}
+
 	p.config = nil
 	p.enabled = false
 	return nil

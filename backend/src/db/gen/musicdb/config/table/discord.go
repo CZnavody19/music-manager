@@ -17,8 +17,9 @@ type discordTable struct {
 	postgres.Table
 
 	// Columns
-	Enabled    postgres.ColumnBool
+	Active     postgres.ColumnBool
 	WebhookURL postgres.ColumnString
+	Enabled    postgres.ColumnBool
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -60,19 +61,21 @@ func newDiscordTable(schemaName, tableName, alias string) *DiscordTable {
 
 func newDiscordTableImpl(schemaName, tableName, alias string) discordTable {
 	var (
-		EnabledColumn    = postgres.BoolColumn("enabled")
+		ActiveColumn     = postgres.BoolColumn("active")
 		WebhookURLColumn = postgres.StringColumn("webhook_url")
-		allColumns       = postgres.ColumnList{EnabledColumn, WebhookURLColumn}
-		mutableColumns   = postgres.ColumnList{WebhookURLColumn}
-		defaultColumns   = postgres.ColumnList{}
+		EnabledColumn    = postgres.BoolColumn("enabled")
+		allColumns       = postgres.ColumnList{ActiveColumn, WebhookURLColumn, EnabledColumn}
+		mutableColumns   = postgres.ColumnList{WebhookURLColumn, EnabledColumn}
+		defaultColumns   = postgres.ColumnList{EnabledColumn}
 	)
 
 	return discordTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		Enabled:    EnabledColumn,
+		Active:     ActiveColumn,
 		WebhookURL: WebhookURLColumn,
+		Enabled:    EnabledColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,
