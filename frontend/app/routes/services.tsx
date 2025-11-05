@@ -9,6 +9,15 @@ type ServiceActionBody = {
     id: string;
 }
 
+export function links() {
+    return [
+        { rel: "preload", href: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/youtube.svg", as: "image" },
+        { rel: "preload", href: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tidal-dark.svg", as: "image" },
+        { rel: "preload", href: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/discord.svg", as: "image" },
+        { rel: "preload", href: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/plex.svg", as: "image" },
+    ]
+}
+
 export async function action({ request }: Route.ActionArgs) {
     const body: ServiceActionBody = await request.json();
     const { client } = await getGQLClient(request);
