@@ -1,8 +1,12 @@
-input DiscordConfig {
+type DiscordConfig {
     webhookURL: String!
 }
 
-input PlexConfig {
+input DiscordConfigInput {
+    webhookURL: String!
+}
+
+type PlexConfig {
     protocol: String!
     host: String!
     port: Int!
@@ -10,7 +14,20 @@ input PlexConfig {
     libraryID: Int!
 }
 
+input PlexConfigInput {
+    protocol: String!
+    host: String!
+    port: Int!
+    token: String!
+    libraryID: Int!
+}
+
+extend type Query {
+    getDiscordConfig: DiscordConfig!
+    getPlexConfig: PlexConfig!
+}
+
 extend type Mutation {
-    setDiscordConfig(config: DiscordConfig!): Boolean!
-    setPlexConfig(config: PlexConfig!): Boolean!
+    setDiscordConfig(config: DiscordConfigInput!): Boolean!
+    setPlexConfig(config: PlexConfigInput!): Boolean!
 }

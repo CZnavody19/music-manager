@@ -37,9 +37,11 @@ func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) 
 
 	httpHandler := http.NewHttpHandler(configStore)
 
+	graphMapper := graph.NewMapper()
 	graphInputMapper := graph.NewInputMapper()
 
 	return &graph.Resolver{
+		Mapper:      graphMapper,
 		InputMapper: graphInputMapper,
 		YouTube:     yt,
 		Discord:     dsc,

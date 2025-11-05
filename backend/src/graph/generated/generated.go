@@ -49,17 +49,31 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	DiscordConfig struct {
+		WebhookURL func(childComplexity int) int
+	}
+
 	Mutation struct {
 		EnableDiscord          func(childComplexity int, enable bool) int
 		EnablePlex             func(childComplexity int, enable bool) int
 		EnableYoutube          func(childComplexity int, enable bool) int
 		RefreshPlexLibrary     func(childComplexity int) int
 		SendTestDiscordMessage func(childComplexity int) int
-		SetDiscordConfig       func(childComplexity int, config model.DiscordConfig) int
-		SetPlexConfig          func(childComplexity int, config model.PlexConfig) int
+		SetDiscordConfig       func(childComplexity int, config model.DiscordConfigInput) int
+		SetPlexConfig          func(childComplexity int, config model.PlexConfigInput) int
+	}
+
+	PlexConfig struct {
+		Host      func(childComplexity int) int
+		LibraryID func(childComplexity int) int
+		Port      func(childComplexity int) int
+		Protocol  func(childComplexity int) int
+		Token     func(childComplexity int) int
 	}
 
 	Query struct {
+		GetDiscordConfig func(childComplexity int) int
+		GetPlexConfig    func(childComplexity int) int
 		GetServiceStatus func(childComplexity int) int
 	}
 
@@ -71,8 +85,8 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	SetDiscordConfig(ctx context.Context, config model.DiscordConfig) (bool, error)
-	SetPlexConfig(ctx context.Context, config model.PlexConfig) (bool, error)
+	SetDiscordConfig(ctx context.Context, config model.DiscordConfigInput) (bool, error)
+	SetPlexConfig(ctx context.Context, config model.PlexConfigInput) (bool, error)
 	EnableYoutube(ctx context.Context, enable bool) (bool, error)
 	EnableDiscord(ctx context.Context, enable bool) (bool, error)
 	EnablePlex(ctx context.Context, enable bool) (bool, error)
@@ -80,6 +94,8 @@ type MutationResolver interface {
 	RefreshPlexLibrary(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
+	GetDiscordConfig(ctx context.Context) (*model.DiscordConfig, error)
+	GetPlexConfig(ctx context.Context) (*model.PlexConfig, error)
 	GetServiceStatus(ctx context.Context) (*model.ServiceStatus, error)
 }
 
@@ -101,6 +117,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "DiscordConfig.webhookURL":
+		if e.complexity.DiscordConfig.WebhookURL == nil {
+			break
+		}
+
+		return e.complexity.DiscordConfig.WebhookURL(childComplexity), true
 
 	case "Mutation.enableDiscord":
 		if e.complexity.Mutation.EnableDiscord == nil {
@@ -157,7 +180,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetDiscordConfig(childComplexity, args["config"].(model.DiscordConfig)), true
+		return e.complexity.Mutation.SetDiscordConfig(childComplexity, args["config"].(model.DiscordConfigInput)), true
 	case "Mutation.setPlexConfig":
 		if e.complexity.Mutation.SetPlexConfig == nil {
 			break
@@ -168,8 +191,51 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetPlexConfig(childComplexity, args["config"].(model.PlexConfig)), true
+		return e.complexity.Mutation.SetPlexConfig(childComplexity, args["config"].(model.PlexConfigInput)), true
 
+	case "PlexConfig.host":
+		if e.complexity.PlexConfig.Host == nil {
+			break
+		}
+
+		return e.complexity.PlexConfig.Host(childComplexity), true
+	case "PlexConfig.libraryID":
+		if e.complexity.PlexConfig.LibraryID == nil {
+			break
+		}
+
+		return e.complexity.PlexConfig.LibraryID(childComplexity), true
+	case "PlexConfig.port":
+		if e.complexity.PlexConfig.Port == nil {
+			break
+		}
+
+		return e.complexity.PlexConfig.Port(childComplexity), true
+	case "PlexConfig.protocol":
+		if e.complexity.PlexConfig.Protocol == nil {
+			break
+		}
+
+		return e.complexity.PlexConfig.Protocol(childComplexity), true
+	case "PlexConfig.token":
+		if e.complexity.PlexConfig.Token == nil {
+			break
+		}
+
+		return e.complexity.PlexConfig.Token(childComplexity), true
+
+	case "Query.getDiscordConfig":
+		if e.complexity.Query.GetDiscordConfig == nil {
+			break
+		}
+
+		return e.complexity.Query.GetDiscordConfig(childComplexity), true
+	case "Query.getPlexConfig":
+		if e.complexity.Query.GetPlexConfig == nil {
+			break
+		}
+
+		return e.complexity.Query.GetPlexConfig(childComplexity), true
 	case "Query.getServiceStatus":
 		if e.complexity.Query.GetServiceStatus == nil {
 			break
@@ -204,8 +270,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputDiscordConfig,
-		ec.unmarshalInputPlexConfig,
+		ec.unmarshalInputDiscordConfigInput,
+		ec.unmarshalInputPlexConfigInput,
 	)
 	first := true
 
@@ -303,11 +369,15 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../config.graphqls", Input: `input DiscordConfig {
+	{Name: "../config.graphqls", Input: `type DiscordConfig {
     webhookURL: String!
 }
 
-input PlexConfig {
+input DiscordConfigInput {
+    webhookURL: String!
+}
+
+type PlexConfig {
     protocol: String!
     host: String!
     port: Int!
@@ -315,9 +385,22 @@ input PlexConfig {
     libraryID: Int!
 }
 
+input PlexConfigInput {
+    protocol: String!
+    host: String!
+    port: Int!
+    token: String!
+    libraryID: Int!
+}
+
+extend type Query {
+    getDiscordConfig: DiscordConfig!
+    getPlexConfig: PlexConfig!
+}
+
 extend type Mutation {
-    setDiscordConfig(config: DiscordConfig!): Boolean!
-    setPlexConfig(config: PlexConfig!): Boolean!
+    setDiscordConfig(config: DiscordConfigInput!): Boolean!
+    setPlexConfig(config: PlexConfigInput!): Boolean!
 }`, BuiltIn: false},
 	{Name: "../directives.graphqls", Input: `directive @discordEnabled on FIELD_DEFINITION
 directive @plexEnabled on FIELD_DEFINITION
@@ -386,7 +469,7 @@ func (ec *executionContext) field_Mutation_enableYoutube_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_setDiscordConfig_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNDiscordConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfig)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNDiscordConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfigInput)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +480,7 @@ func (ec *executionContext) field_Mutation_setDiscordConfig_args(ctx context.Con
 func (ec *executionContext) field_Mutation_setPlexConfig_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNPlexConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNPlexConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfigInput)
 	if err != nil {
 		return nil, err
 	}
@@ -468,6 +551,35 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _DiscordConfig_webhookURL(ctx context.Context, field graphql.CollectedField, obj *model.DiscordConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DiscordConfig_webhookURL,
+		func(ctx context.Context) (any, error) {
+			return obj.WebhookURL, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DiscordConfig_webhookURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DiscordConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_setDiscordConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -476,7 +588,7 @@ func (ec *executionContext) _Mutation_setDiscordConfig(ctx context.Context, fiel
 		ec.fieldContext_Mutation_setDiscordConfig,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetDiscordConfig(ctx, fc.Args["config"].(model.DiscordConfig))
+			return ec.resolvers.Mutation().SetDiscordConfig(ctx, fc.Args["config"].(model.DiscordConfigInput))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -517,7 +629,7 @@ func (ec *executionContext) _Mutation_setPlexConfig(ctx context.Context, field g
 		ec.fieldContext_Mutation_setPlexConfig,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetPlexConfig(ctx, fc.Args["config"].(model.PlexConfig))
+			return ec.resolvers.Mutation().SetPlexConfig(ctx, fc.Args["config"].(model.PlexConfigInput))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -752,6 +864,225 @@ func (ec *executionContext) fieldContext_Mutation_refreshPlexLibrary(_ context.C
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PlexConfig_protocol(ctx context.Context, field graphql.CollectedField, obj *model.PlexConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PlexConfig_protocol,
+		func(ctx context.Context) (any, error) {
+			return obj.Protocol, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PlexConfig_protocol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PlexConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PlexConfig_host(ctx context.Context, field graphql.CollectedField, obj *model.PlexConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PlexConfig_host,
+		func(ctx context.Context) (any, error) {
+			return obj.Host, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PlexConfig_host(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PlexConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PlexConfig_port(ctx context.Context, field graphql.CollectedField, obj *model.PlexConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PlexConfig_port,
+		func(ctx context.Context) (any, error) {
+			return obj.Port, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PlexConfig_port(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PlexConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PlexConfig_token(ctx context.Context, field graphql.CollectedField, obj *model.PlexConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PlexConfig_token,
+		func(ctx context.Context) (any, error) {
+			return obj.Token, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PlexConfig_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PlexConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PlexConfig_libraryID(ctx context.Context, field graphql.CollectedField, obj *model.PlexConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PlexConfig_libraryID,
+		func(ctx context.Context) (any, error) {
+			return obj.LibraryID, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PlexConfig_libraryID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PlexConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getDiscordConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_getDiscordConfig,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().GetDiscordConfig(ctx)
+		},
+		nil,
+		ec.marshalNDiscordConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfig,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_getDiscordConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "webhookURL":
+				return ec.fieldContext_DiscordConfig_webhookURL(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DiscordConfig", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getPlexConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_getPlexConfig,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().GetPlexConfig(ctx)
+		},
+		nil,
+		ec.marshalNPlexConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_getPlexConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "protocol":
+				return ec.fieldContext_PlexConfig_protocol(ctx, field)
+			case "host":
+				return ec.fieldContext_PlexConfig_host(ctx, field)
+			case "port":
+				return ec.fieldContext_PlexConfig_port(ctx, field)
+			case "token":
+				return ec.fieldContext_PlexConfig_token(ctx, field)
+			case "libraryID":
+				return ec.fieldContext_PlexConfig_libraryID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PlexConfig", field.Name)
 		},
 	}
 	return fc, nil
@@ -2435,8 +2766,8 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputDiscordConfig(ctx context.Context, obj any) (model.DiscordConfig, error) {
-	var it model.DiscordConfig
+func (ec *executionContext) unmarshalInputDiscordConfigInput(ctx context.Context, obj any) (model.DiscordConfigInput, error) {
+	var it model.DiscordConfigInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -2462,8 +2793,8 @@ func (ec *executionContext) unmarshalInputDiscordConfig(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPlexConfig(ctx context.Context, obj any) (model.PlexConfig, error) {
-	var it model.PlexConfig
+func (ec *executionContext) unmarshalInputPlexConfigInput(ctx context.Context, obj any) (model.PlexConfigInput, error) {
+	var it model.PlexConfigInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -2524,6 +2855,45 @@ func (ec *executionContext) unmarshalInputPlexConfig(ctx context.Context, obj an
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var discordConfigImplementors = []string{"DiscordConfig"}
+
+func (ec *executionContext) _DiscordConfig(ctx context.Context, sel ast.SelectionSet, obj *model.DiscordConfig) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, discordConfigImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DiscordConfig")
+		case "webhookURL":
+			out.Values[i] = ec._DiscordConfig_webhookURL(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var mutationImplementors = []string{"Mutation"}
 
@@ -2616,6 +2986,65 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var plexConfigImplementors = []string{"PlexConfig"}
+
+func (ec *executionContext) _PlexConfig(ctx context.Context, sel ast.SelectionSet, obj *model.PlexConfig) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, plexConfigImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PlexConfig")
+		case "protocol":
+			out.Values[i] = ec._PlexConfig_protocol(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "host":
+			out.Values[i] = ec._PlexConfig_host(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "port":
+			out.Values[i] = ec._PlexConfig_port(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "token":
+			out.Values[i] = ec._PlexConfig_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "libraryID":
+			out.Values[i] = ec._PlexConfig_libraryID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -2635,6 +3064,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "getDiscordConfig":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDiscordConfig(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getPlexConfig":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getPlexConfig(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getServiceStatus":
 			field := field
 
@@ -3088,8 +3561,22 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNDiscordConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfig(ctx context.Context, v any) (model.DiscordConfig, error) {
-	res, err := ec.unmarshalInputDiscordConfig(ctx, v)
+func (ec *executionContext) marshalNDiscordConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfig(ctx context.Context, sel ast.SelectionSet, v model.DiscordConfig) graphql.Marshaler {
+	return ec._DiscordConfig(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDiscordConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfig(ctx context.Context, sel ast.SelectionSet, v *model.DiscordConfig) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DiscordConfig(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNDiscordConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐDiscordConfigInput(ctx context.Context, v any) (model.DiscordConfigInput, error) {
+	res, err := ec.unmarshalInputDiscordConfigInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -3109,8 +3596,22 @@ func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNPlexConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig(ctx context.Context, v any) (model.PlexConfig, error) {
-	res, err := ec.unmarshalInputPlexConfig(ctx, v)
+func (ec *executionContext) marshalNPlexConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig(ctx context.Context, sel ast.SelectionSet, v model.PlexConfig) graphql.Marshaler {
+	return ec._PlexConfig(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPlexConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfig(ctx context.Context, sel ast.SelectionSet, v *model.PlexConfig) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PlexConfig(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNPlexConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfigInput(ctx context.Context, v any) (model.PlexConfigInput, error) {
+	res, err := ec.unmarshalInputPlexConfigInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

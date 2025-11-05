@@ -11,8 +11,8 @@ import (
 )
 
 // SetDiscordConfig is the resolver for the setDiscordConfig field.
-func (r *mutationResolver) SetDiscordConfig(ctx context.Context, config model.DiscordConfig) (bool, error) {
-	cfg := r.InputMapper.MapDiscordConfig(config)
+func (r *mutationResolver) SetDiscordConfig(ctx context.Context, config model.DiscordConfigInput) (bool, error) {
+	cfg := r.InputMapper.MapDiscordConfigInput(config)
 
 	err := r.ConfigStore.SaveDiscordConfig(ctx, cfg)
 	if err != nil {
@@ -23,8 +23,8 @@ func (r *mutationResolver) SetDiscordConfig(ctx context.Context, config model.Di
 }
 
 // SetPlexConfig is the resolver for the setPlexConfig field.
-func (r *mutationResolver) SetPlexConfig(ctx context.Context, config model.PlexConfig) (bool, error) {
-	cfg := r.InputMapper.MapPlexConfig(config)
+func (r *mutationResolver) SetPlexConfig(ctx context.Context, config model.PlexConfigInput) (bool, error) {
+	cfg := r.InputMapper.MapPlexConfigInput(config)
 
 	err := r.ConfigStore.SavePlexConfig(ctx, cfg)
 	if err != nil {
@@ -32,4 +32,24 @@ func (r *mutationResolver) SetPlexConfig(ctx context.Context, config model.PlexC
 	}
 
 	return true, nil
+}
+
+// GetDiscordConfig is the resolver for the getDiscordConfig field.
+func (r *queryResolver) GetDiscordConfig(ctx context.Context) (*model.DiscordConfig, error) {
+	config, err := r.ConfigStore.GetDiscordConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Mapper.MapDiscordConfig(config), nil
+}
+
+// GetPlexConfig is the resolver for the getPlexConfig field.
+func (r *queryResolver) GetPlexConfig(ctx context.Context) (*model.PlexConfig, error) {
+	config, err := r.ConfigStore.GetPlexConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Mapper.MapPlexConfig(config), nil
 }

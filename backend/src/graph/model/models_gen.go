@@ -6,10 +6,22 @@ type DiscordConfig struct {
 	WebhookURL string `json:"webhookURL"`
 }
 
+type DiscordConfigInput struct {
+	WebhookURL string `json:"webhookURL"`
+}
+
 type Mutation struct {
 }
 
 type PlexConfig struct {
+	Protocol  string `json:"protocol"`
+	Host      string `json:"host"`
+	Port      int64  `json:"port"`
+	Token     string `json:"token"`
+	LibraryID int64  `json:"libraryID"`
+}
+
+type PlexConfigInput struct {
 	Protocol  string `json:"protocol"`
 	Host      string `json:"host"`
 	Port      int64  `json:"port"`

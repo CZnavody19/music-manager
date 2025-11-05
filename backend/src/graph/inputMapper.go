@@ -12,13 +12,13 @@ func NewInputMapper() *InputMapper {
 	return &InputMapper{}
 }
 
-func (im *InputMapper) MapDiscordConfig(input model.DiscordConfig) *domain.DiscordConfig {
+func (im *InputMapper) MapDiscordConfigInput(input model.DiscordConfigInput) *domain.DiscordConfig {
 	return &domain.DiscordConfig{
 		WebhookURL: input.WebhookURL,
 	}
 }
 
-func (im *InputMapper) MapPlexConfig(input model.PlexConfig) *domain.PlexConfig {
+func (im *InputMapper) MapPlexConfigInput(input model.PlexConfigInput) *domain.PlexConfig {
 	return &domain.PlexConfig{
 		Protocol:  input.Protocol,
 		Host:      input.Host,
