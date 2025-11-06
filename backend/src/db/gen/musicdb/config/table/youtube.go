@@ -70,7 +70,7 @@ func newYoutubeTableImpl(schemaName, tableName, alias string) youtubeTable {
 		PlaylistIDColumn = postgres.StringColumn("playlist_id")
 		allColumns       = postgres.ColumnList{ActiveColumn, OAuthColumn, TokenColumn, EnabledColumn, PlaylistIDColumn}
 		mutableColumns   = postgres.ColumnList{OAuthColumn, TokenColumn, EnabledColumn, PlaylistIDColumn}
-		defaultColumns   = postgres.ColumnList{EnabledColumn, PlaylistIDColumn}
+		defaultColumns   = postgres.ColumnList{OAuthColumn, TokenColumn, EnabledColumn, PlaylistIDColumn}
 	)
 
 	return youtubeTable{

@@ -65,7 +65,14 @@ func setupService(configuration *config.Config) (*ServerComponents, error) {
 		return nil, err
 	}
 
-	resolver, err := setup.NewResolver(dbConn, *configuration)
+	mqConn, err := setup.SetupMq(&configuration.MQConfig)
+	if err != nil {
+		zap.S().Error("Error setting up mq connection")
+		zap.S().Error(err.Error())
+		return nil, err
+	}
+
+	resolver, err := setup.NewResolver(dbConn, mqConn, *configuration)
 	if err != nil {
 		zap.S().Error("Error setting up resolver")
 		zap.S().Error(err.Error())

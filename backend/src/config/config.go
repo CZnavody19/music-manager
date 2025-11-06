@@ -10,6 +10,7 @@ type Config struct {
 	Server        ServerConfig
 	LoggingConfig LoggingConfig
 	DBConfig      DBConfig
+	MQConfig      MQConfig
 }
 
 func LoadConfig() *Config {
@@ -17,6 +18,7 @@ func LoadConfig() *Config {
 		Server:        loadServerConfig(),
 		LoggingConfig: loadLoggingConfig(),
 		DBConfig:      loadDbConfig(),
+		MQConfig:      loadMqConfig(),
 	}
 }
 

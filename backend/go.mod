@@ -13,6 +13,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/nextap-solutions/goNextService v0.1.5
 	github.com/pressly/goose/v3 v3.26.0
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/rs/cors v1.10.1
 	github.com/sosodev/duration v1.3.1
 	github.com/spf13/viper v1.21.0

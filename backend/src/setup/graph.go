@@ -15,9 +15,10 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/discord"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) {
+func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) (*graph.Resolver, error) {
 	dbMapper := db.NewMapper()
 
 	configStore := configStore.NewConfigStore(dbConn, dbMapper)

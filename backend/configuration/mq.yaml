@@ -1,0 +1,1 @@
+ConnectionURI: amqp://guest:guest@mq:5672
