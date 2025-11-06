@@ -65,6 +65,7 @@ type ComplexityRoot struct {
 		SendTestDiscordMessage func(childComplexity int) int
 		SetDiscordConfig       func(childComplexity int, config model.DiscordConfigInput) int
 		SetPlexConfig          func(childComplexity int, config model.PlexConfigInput) int
+		SetYoutubeConfig       func(childComplexity int, config model.YoutubeConfigInput) int
 	}
 
 	PlexConfig struct {
@@ -79,12 +80,17 @@ type ComplexityRoot struct {
 		GetDiscordConfig func(childComplexity int) int
 		GetPlexConfig    func(childComplexity int) int
 		GetServiceStatus func(childComplexity int) int
+		GetYoutubeConfig func(childComplexity int) int
 	}
 
 	ServiceStatus struct {
 		Discord func(childComplexity int) int
 		Plex    func(childComplexity int) int
 		Youtube func(childComplexity int) int
+	}
+
+	YoutubeConfig struct {
+		PlaylistID func(childComplexity int) int
 	}
 }
 
@@ -94,6 +100,7 @@ type MutationResolver interface {
 	ChangeLogin(ctx context.Context, input model.LoginInput) (bool, error)
 	SetDiscordConfig(ctx context.Context, config model.DiscordConfigInput) (bool, error)
 	SetPlexConfig(ctx context.Context, config model.PlexConfigInput) (bool, error)
+	SetYoutubeConfig(ctx context.Context, config model.YoutubeConfigInput) (bool, error)
 	EnableYoutube(ctx context.Context, enable bool) (bool, error)
 	EnableDiscord(ctx context.Context, enable bool) (bool, error)
 	EnablePlex(ctx context.Context, enable bool) (bool, error)
@@ -103,6 +110,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	GetDiscordConfig(ctx context.Context) (*model.DiscordConfig, error)
 	GetPlexConfig(ctx context.Context) (*model.PlexConfig, error)
+	GetYoutubeConfig(ctx context.Context) (*model.YoutubeConfig, error)
 	GetServiceStatus(ctx context.Context) (*model.ServiceStatus, error)
 }
 
@@ -227,6 +235,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SetPlexConfig(childComplexity, args["config"].(model.PlexConfigInput)), true
+	case "Mutation.setYoutubeConfig":
+		if e.complexity.Mutation.SetYoutubeConfig == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setYoutubeConfig_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetYoutubeConfig(childComplexity, args["config"].(model.YoutubeConfigInput)), true
 
 	case "PlexConfig.host":
 		if e.complexity.PlexConfig.Host == nil {
@@ -277,6 +296,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetServiceStatus(childComplexity), true
+	case "Query.getYoutubeConfig":
+		if e.complexity.Query.GetYoutubeConfig == nil {
+			break
+		}
+
+		return e.complexity.Query.GetYoutubeConfig(childComplexity), true
 
 	case "ServiceStatus.discord":
 		if e.complexity.ServiceStatus.Discord == nil {
@@ -297,6 +322,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ServiceStatus.Youtube(childComplexity), true
 
+	case "YoutubeConfig.playlistID":
+		if e.complexity.YoutubeConfig.PlaylistID == nil {
+			break
+		}
+
+		return e.complexity.YoutubeConfig.PlaylistID(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -308,6 +340,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputDiscordConfigInput,
 		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputPlexConfigInput,
+		ec.unmarshalInputYoutubeConfigInput,
 	)
 	first := true
 
@@ -439,14 +472,24 @@ input PlexConfigInput {
     libraryID: Int!
 }
 
+type YoutubeConfig {
+    playlistID: String!
+}
+
+input YoutubeConfigInput {
+    playlistID: String!
+}
+
 extend type Query {
     getDiscordConfig: DiscordConfig! @auth
     getPlexConfig: PlexConfig! @auth
+    getYoutubeConfig: YoutubeConfig! @auth
 }
 
 extend type Mutation {
     setDiscordConfig(config: DiscordConfigInput!): Boolean! @auth
     setPlexConfig(config: PlexConfigInput!): Boolean! @auth
+    setYoutubeConfig(config: YoutubeConfigInput!): Boolean! @auth
 }`, BuiltIn: false},
 	{Name: "../directives.graphqls", Input: `directive @auth on FIELD_DEFINITION
 
@@ -551,6 +594,17 @@ func (ec *executionContext) field_Mutation_setPlexConfig_args(ctx context.Contex
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNPlexConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfigInput)
+	if err != nil {
+		return nil, err
+	}
+	args["config"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setYoutubeConfig_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNYoutubeConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐYoutubeConfigInput)
 	if err != nil {
 		return nil, err
 	}
@@ -889,6 +943,60 @@ func (ec *executionContext) fieldContext_Mutation_setPlexConfig(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_setPlexConfig_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setYoutubeConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setYoutubeConfig,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetYoutubeConfig(ctx, fc.Args["config"].(model.YoutubeConfigInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setYoutubeConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setYoutubeConfig_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1400,6 +1508,52 @@ func (ec *executionContext) fieldContext_Query_getPlexConfig(_ context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getYoutubeConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_getYoutubeConfig,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().GetYoutubeConfig(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal *model.YoutubeConfig
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNYoutubeConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐYoutubeConfig,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_getYoutubeConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "playlistID":
+				return ec.fieldContext_YoutubeConfig_playlistID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type YoutubeConfig", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getServiceStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1640,6 +1794,35 @@ func (ec *executionContext) fieldContext_ServiceStatus_plex(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YoutubeConfig_playlistID(ctx context.Context, field graphql.CollectedField, obj *model.YoutubeConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_YoutubeConfig_playlistID,
+		func(ctx context.Context) (any, error) {
+			return obj.PlaylistID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_YoutubeConfig_playlistID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YoutubeConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3207,6 +3390,33 @@ func (ec *executionContext) unmarshalInputPlexConfigInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputYoutubeConfigInput(ctx context.Context, obj any) (model.YoutubeConfigInput, error) {
+	var it model.YoutubeConfigInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"playlistID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "playlistID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("playlistID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PlaylistID = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -3304,6 +3514,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "setPlexConfig":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setPlexConfig(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setYoutubeConfig":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setYoutubeConfig(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3488,6 +3705,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getYoutubeConfig":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getYoutubeConfig(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getServiceStatus":
 			field := field
 
@@ -3564,6 +3803,45 @@ func (ec *executionContext) _ServiceStatus(ctx context.Context, sel ast.Selectio
 			}
 		case "plex":
 			out.Values[i] = ec._ServiceStatus_plex(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var youtubeConfigImplementors = []string{"YoutubeConfig"}
+
+func (ec *executionContext) _YoutubeConfig(ctx context.Context, sel ast.SelectionSet, obj *model.YoutubeConfig) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, youtubeConfigImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("YoutubeConfig")
+		case "playlistID":
+			out.Values[i] = ec._YoutubeConfig_playlistID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4028,6 +4306,25 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNYoutubeConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐYoutubeConfig(ctx context.Context, sel ast.SelectionSet, v model.YoutubeConfig) graphql.Marshaler {
+	return ec._YoutubeConfig(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNYoutubeConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐYoutubeConfig(ctx context.Context, sel ast.SelectionSet, v *model.YoutubeConfig) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._YoutubeConfig(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNYoutubeConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐYoutubeConfigInput(ctx context.Context, v any) (model.YoutubeConfigInput, error) {
+	res, err := ec.unmarshalInputYoutubeConfigInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

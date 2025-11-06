@@ -42,3 +42,11 @@ type ServiceStatus struct {
 	Discord bool `json:"discord"`
 	Plex    bool `json:"plex"`
 }
+
+type YoutubeConfig struct {
+	PlaylistID string `json:"playlistID"`
+}
+
+type YoutubeConfigInput struct {
+	PlaylistID string `json:"playlistID"`
+}

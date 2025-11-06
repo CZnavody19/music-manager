@@ -22,12 +22,22 @@ input PlexConfigInput {
     libraryID: Int!
 }
 
+type YoutubeConfig {
+    playlistID: String!
+}
+
+input YoutubeConfigInput {
+    playlistID: String!
+}
+
 extend type Query {
     getDiscordConfig: DiscordConfig! @auth
     getPlexConfig: PlexConfig! @auth
+    getYoutubeConfig: YoutubeConfig! @auth
 }
 
 extend type Mutation {
     setDiscordConfig(config: DiscordConfigInput!): Boolean! @auth
     setPlexConfig(config: PlexConfigInput!): Boolean! @auth
+    setYoutubeConfig(config: YoutubeConfigInput!): Boolean! @auth
 }

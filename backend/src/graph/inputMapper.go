@@ -34,3 +34,9 @@ func (im *InputMapper) MapLoginInput(input model.LoginInput) *domain.Credentials
 		Password: input.Password,
 	}
 }
+
+func (im *InputMapper) MapYoutubeConfigInput(input model.YoutubeConfigInput) *domain.YouTubeConfig {
+	return &domain.YouTubeConfig{
+		PlaylistID: input.PlaylistID,
+	}
+}

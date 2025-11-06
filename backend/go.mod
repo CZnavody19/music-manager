@@ -7,6 +7,7 @@ replace go.uber.org/zap => github.com/ziyaozclk/zap v1.19.3-0.20211130062134-0e5
 require (
 	github.com/99designs/gqlgen v0.17.81
 	github.com/XSAM/otelsql v0.40.0
+	github.com/go-co-op/gocron/v2 v2.14.2
 	github.com/go-jet/jet/v2 v2.14.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
@@ -44,7 +45,6 @@ require (
 	github.com/elastic/go-sysinfo v1.15.4 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/go-co-op/gocron/v2 v2.14.2 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect

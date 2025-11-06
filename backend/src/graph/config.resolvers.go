@@ -34,6 +34,18 @@ func (r *mutationResolver) SetPlexConfig(ctx context.Context, config model.PlexC
 	return true, nil
 }
 
+// SetYoutubeConfig is the resolver for the setYoutubeConfig field.
+func (r *mutationResolver) SetYoutubeConfig(ctx context.Context, config model.YoutubeConfigInput) (bool, error) {
+	cfg := r.InputMapper.MapYoutubeConfigInput(config)
+
+	err := r.ConfigStore.SaveYoutubeConfig(ctx, cfg)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // GetDiscordConfig is the resolver for the getDiscordConfig field.
 func (r *queryResolver) GetDiscordConfig(ctx context.Context) (*model.DiscordConfig, error) {
 	config, err := r.ConfigStore.GetDiscordConfig(ctx)
@@ -52,4 +64,14 @@ func (r *queryResolver) GetPlexConfig(ctx context.Context) (*model.PlexConfig, e
 	}
 
 	return r.Mapper.MapPlexConfig(config), nil
+}
+
+// GetYoutubeConfig is the resolver for the getYoutubeConfig field.
+func (r *queryResolver) GetYoutubeConfig(ctx context.Context) (*model.YoutubeConfig, error) {
+	config, err := r.ConfigStore.GetYoutubeConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Mapper.MapYoutubeConfig(config), nil
 }

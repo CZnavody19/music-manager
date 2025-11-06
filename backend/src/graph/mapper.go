@@ -27,3 +27,9 @@ func (im *Mapper) MapPlexConfig(input *domain.PlexConfig) *model.PlexConfig {
 		LibraryID: input.LibraryID,
 	}
 }
+
+func (im *Mapper) MapYoutubeConfig(input *domain.YouTubeConfig) *model.YoutubeConfig {
+	return &model.YoutubeConfig{
+		PlaylistID: input.PlaylistID,
+	}
+}
