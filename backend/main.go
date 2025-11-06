@@ -125,9 +125,11 @@ func setupService(configuration *config.Config) (*ServerComponents, error) {
 		return nil, err
 	}
 
-	err = setup.SetupCron(scheduler, resolver)
-	if err != nil {
-		return nil, err
+	if configuration.Server.RunCRON {
+		err = setup.SetupCron(scheduler, resolver)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	cronComponent := components.NewCronComponent(scheduler)

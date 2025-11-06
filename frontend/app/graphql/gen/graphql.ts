@@ -41,6 +41,7 @@ export type Mutation = {
   sendTestDiscordMessage: Scalars['Boolean']['output'];
   setDiscordConfig: Scalars['Boolean']['output'];
   setPlexConfig: Scalars['Boolean']['output'];
+  setYoutubeConfig: Scalars['Boolean']['output'];
 };
 
 
@@ -78,6 +79,11 @@ export type MutationSetPlexConfigArgs = {
   config: PlexConfigInput;
 };
 
+
+export type MutationSetYoutubeConfigArgs = {
+  config: YoutubeConfigInput;
+};
+
 export type PlexConfig = {
   __typename?: 'PlexConfig';
   host: Scalars['String']['output'];
@@ -100,6 +106,7 @@ export type Query = {
   getDiscordConfig: DiscordConfig;
   getPlexConfig: PlexConfig;
   getServiceStatus: ServiceStatus;
+  getYoutubeConfig: YoutubeConfig;
 };
 
 export type ServiceStatus = {
@@ -107,4 +114,13 @@ export type ServiceStatus = {
   discord: Scalars['Boolean']['output'];
   plex: Scalars['Boolean']['output'];
   youtube: Scalars['Boolean']['output'];
+};
+
+export type YoutubeConfig = {
+  __typename?: 'YoutubeConfig';
+  playlistID: Scalars['String']['output'];
+};
+
+export type YoutubeConfigInput = {
+  playlistID: Scalars['String']['input'];
 };

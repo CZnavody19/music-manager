@@ -9,6 +9,13 @@ type ServiceActionBody = {
     id: string;
 }
 
+export function meta() {
+    return [
+        { title: "Services - Music Manager" },
+        { name: "description", content: "Manage your music collection with ease." },
+    ];
+}
+
 export function links() {
     return [
         { rel: "preload", href: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/youtube.svg", as: "image" },

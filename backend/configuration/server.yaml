@@ -10,3 +10,4 @@ ShutdownTimeout: 5s
 PlaygroundEnable: true
 IntrospectionEnable: true
 TokenCheckEnable: false
+RunCRON: false
