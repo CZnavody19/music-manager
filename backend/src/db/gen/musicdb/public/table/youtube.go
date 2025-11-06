@@ -11,17 +11,19 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 )
 
-var Youtube = newYoutubeTable("config", "youtube", "")
+var Youtube = newYoutubeTable("public", "youtube", "")
 
 type youtubeTable struct {
 	postgres.Table
 
 	// Columns
-	Active     postgres.ColumnBool
-	OAuth      postgres.ColumnBytea
-	Token      postgres.ColumnBytea
-	Enabled    postgres.ColumnBool
-	PlaylistID postgres.ColumnString
+	VideoID       postgres.ColumnString
+	Title         postgres.ColumnString
+	ChannelTitle  postgres.ColumnString
+	ThumbnailURL  postgres.ColumnString
+	Duration      postgres.ColumnInteger
+	Position      postgres.ColumnInteger
+	NextPageToken postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -63,25 +65,29 @@ func newYoutubeTable(schemaName, tableName, alias string) *YoutubeTable {
 
 func newYoutubeTableImpl(schemaName, tableName, alias string) youtubeTable {
 	var (
-		ActiveColumn     = postgres.BoolColumn("active")
-		OAuthColumn      = postgres.ByteaColumn("oauth")
-		TokenColumn      = postgres.ByteaColumn("token")
-		EnabledColumn    = postgres.BoolColumn("enabled")
-		PlaylistIDColumn = postgres.StringColumn("playlist_id")
-		allColumns       = postgres.ColumnList{ActiveColumn, OAuthColumn, TokenColumn, EnabledColumn, PlaylistIDColumn}
-		mutableColumns   = postgres.ColumnList{OAuthColumn, TokenColumn, EnabledColumn, PlaylistIDColumn}
-		defaultColumns   = postgres.ColumnList{EnabledColumn, PlaylistIDColumn}
+		VideoIDColumn       = postgres.StringColumn("video_id")
+		TitleColumn         = postgres.StringColumn("title")
+		ChannelTitleColumn  = postgres.StringColumn("channel_title")
+		ThumbnailURLColumn  = postgres.StringColumn("thumbnail_url")
+		DurationColumn      = postgres.IntegerColumn("duration")
+		PositionColumn      = postgres.IntegerColumn("position")
+		NextPageTokenColumn = postgres.StringColumn("next_page_token")
+		allColumns          = postgres.ColumnList{VideoIDColumn, TitleColumn, ChannelTitleColumn, ThumbnailURLColumn, DurationColumn, PositionColumn, NextPageTokenColumn}
+		mutableColumns      = postgres.ColumnList{TitleColumn, ChannelTitleColumn, ThumbnailURLColumn, DurationColumn, PositionColumn, NextPageTokenColumn}
+		defaultColumns      = postgres.ColumnList{}
 	)
 
 	return youtubeTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		Active:     ActiveColumn,
-		OAuth:      OAuthColumn,
-		Token:      TokenColumn,
-		Enabled:    EnabledColumn,
-		PlaylistID: PlaylistIDColumn,
+		VideoID:       VideoIDColumn,
+		Title:         TitleColumn,
+		ChannelTitle:  ChannelTitleColumn,
+		ThumbnailURL:  ThumbnailURLColumn,
+		Duration:      DurationColumn,
+		Position:      PositionColumn,
+		NextPageToken: NextPageTokenColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

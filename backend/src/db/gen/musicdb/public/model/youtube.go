@@ -8,9 +8,11 @@
 package model
 
 type Youtube struct {
-	Active     bool `sql:"primary_key"`
-	OAuth      []byte
-	Token      []byte
-	Enabled    bool
-	PlaylistID string
+	VideoID       string `sql:"primary_key"`
+	Title         string
+	ChannelTitle  string
+	ThumbnailURL  *string
+	Duration      *int32
+	Position      int32
+	NextPageToken string
 }

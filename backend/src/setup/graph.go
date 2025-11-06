@@ -7,6 +7,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/config"
 	"github.com/CZnavody19/music-manager/src/db"
 	configStore "github.com/CZnavody19/music-manager/src/db/config"
+	youtubeStore "github.com/CZnavody19/music-manager/src/db/youtube"
 	"github.com/CZnavody19/music-manager/src/graph"
 	"github.com/CZnavody19/music-manager/src/graph/generated"
 	"github.com/CZnavody19/music-manager/src/http"
@@ -20,13 +21,14 @@ func NewResolver(dbConn *sql.DB, config config.Config) (*graph.Resolver, error) 
 	dbMapper := db.NewMapper()
 
 	configStore := configStore.NewConfigStore(dbConn, dbMapper)
+	youtubeStore := youtubeStore.NewYouTubeStore(dbConn, dbMapper)
 
 	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
 	if err != nil {
 		return nil, err
 	}
 
-	yt, err := youtube.NewYouTube(configStore)
+	yt, err := youtube.NewYouTube(configStore, youtubeStore)
 	if err != nil {
 		return nil, err
 	}

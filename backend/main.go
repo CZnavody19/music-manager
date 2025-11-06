@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -15,6 +16,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/graph"
 	"github.com/CZnavody19/music-manager/src/graph/generated"
 	"github.com/CZnavody19/music-manager/src/setup"
+	"github.com/go-co-op/gocron/v2"
 	"github.com/gorilla/mux"
 	"github.com/nextap-solutions/goNextService"
 	"github.com/nextap-solutions/goNextService/components"
@@ -25,6 +27,7 @@ import (
 
 type ServerComponents struct {
 	httpServer goNextService.Component
+	cron       goNextService.Component
 }
 
 func main() {
@@ -43,7 +46,7 @@ func serve() error {
 		return err
 	}
 
-	app := goNextService.NewApplications(api.httpServer)
+	app := goNextService.NewApplications(api.httpServer, api.cron)
 	app.WithLogger(zap.S())
 
 	return app.Run()
@@ -116,7 +119,21 @@ func setupService(configuration *config.Config) (*ServerComponents, error) {
 	}
 	httpComponent := components.NewHttpComponent(handler, components.WithHttpServer(&api))
 
+	scheduler, err := gocron.NewScheduler(gocron.WithLocation(time.UTC))
+	if err != nil {
+		zap.S().Error("Error setting up scheduler", err)
+		return nil, err
+	}
+
+	err = setup.SetupCron(scheduler, resolver)
+	if err != nil {
+		return nil, err
+	}
+
+	cronComponent := components.NewCronComponent(scheduler)
+
 	return &ServerComponents{
 		httpServer: httpComponent,
+		cron:       cronComponent,
 	}, nil
 }

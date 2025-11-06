@@ -3,10 +3,14 @@ package youtube
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/CZnavody19/music-manager/src/db/config"
+	"github.com/CZnavody19/music-manager/src/db/youtube"
 	"github.com/CZnavody19/music-manager/src/domain"
 	"github.com/go-jet/jet/v2/qrm"
+	"github.com/sosodev/duration"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
@@ -16,6 +20,8 @@ import (
 type YouTube struct {
 	enabled     bool
 	configStore *config.ConfigStore
+	config      *domain.YouTubeConfig
+	ytStore     *youtube.YouTubeStore
 	yt          *youtubeApi.Service
 }
 
@@ -45,7 +51,7 @@ func getYtService(ctx context.Context, cfg *domain.YouTubeConfig) (*youtubeApi.S
 	return yt, nil
 }
 
-func NewYouTube(cs *config.ConfigStore) (*YouTube, error) {
+func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore) (*YouTube, error) {
 	ctx := context.Background()
 
 	config, err := cs.GetYoutubeConfig(ctx)
@@ -66,6 +72,8 @@ func NewYouTube(cs *config.ConfigStore) (*YouTube, error) {
 	return &YouTube{
 		enabled:     enabled,
 		configStore: cs,
+		config:      config,
+		ytStore:     yts,
 		yt:          service,
 	}, nil
 }
@@ -91,6 +99,7 @@ func (yt *YouTube) Enable(ctx context.Context) error {
 	}
 
 	yt.yt = service
+	yt.config = config
 	yt.enabled = true
 
 	return nil
@@ -103,7 +112,77 @@ func (yt *YouTube) Disable(ctx context.Context) error {
 	}
 
 	yt.yt = nil
+	yt.config = nil
 	yt.enabled = false
+
+	return nil
+}
+
+func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
+	if !yt.enabled {
+		return nil
+	}
+
+	zap.S().Info("Refreshing YouTube playlist")
+
+	pageToken, err := yt.ytStore.GetLatestPageToken(ctx)
+	if err != nil && err != qrm.ErrNoRows {
+		return err
+	}
+
+	res, err := yt.yt.PlaylistItems.List([]string{"snippet"}).Context(ctx).PlaylistId(yt.config.PlaylistID).MaxResults(50).PageToken(pageToken).Do()
+	if err != nil {
+		return err
+	}
+
+	token := res.NextPageToken
+	videos := make(map[string]*domain.YouTubeVideo, len(res.Items))
+	ids := make([]string, 0, len(res.Items))
+
+	if token == "" {
+		token = pageToken
+	}
+
+	for _, item := range res.Items {
+		ids = append(ids, item.Snippet.ResourceId.VideoId)
+
+		videos[item.Snippet.ResourceId.VideoId] = &domain.YouTubeVideo{
+			VideoID:       item.Snippet.ResourceId.VideoId,
+			Title:         item.Snippet.Title,
+			ChannelTitle:  item.Snippet.VideoOwnerChannelTitle,
+			ThumbnailURL:  &item.Snippet.Thumbnails.Default.Url,
+			Duration:      nil,
+			Position:      item.Snippet.Position,
+			NextPageToken: token,
+		}
+	}
+
+	vidRes, err := yt.yt.Videos.List([]string{"contentDetails"}).Context(ctx).Id(strings.Join(ids, ",")).MaxResults(50).Do()
+	if err != nil {
+		return err
+	}
+
+	videoArr := make([]*domain.YouTubeVideo, 0, len(videos))
+
+	for _, item := range vidRes.Items {
+		dur, err := duration.Parse(item.ContentDetails.Duration)
+		if err != nil {
+			return err
+		}
+
+		duration := int64(dur.ToTimeDuration().Seconds())
+
+		origItem := videos[item.Id]
+		origItem.Duration = &duration
+		videoArr = append(videoArr, origItem)
+	}
+
+	err = yt.ytStore.StoreVideos(ctx, videoArr)
+	if err != nil {
+		return err
+	}
+
+	zap.S().Info("YouTube playlist refreshed successfully")
 
 	return nil
 }

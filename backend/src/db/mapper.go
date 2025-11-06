@@ -14,9 +14,10 @@ func NewMapper() *Mapper {
 
 func (m *Mapper) MapYouTubeConfig(input *model.Youtube) *domain.YouTubeConfig {
 	return &domain.YouTubeConfig{
-		Enabled: input.Enabled,
-		OAuth:   input.OAuth,
-		Token:   input.Token,
+		Enabled:    input.Enabled,
+		OAuth:      input.OAuth,
+		Token:      input.Token,
+		PlaylistID: input.PlaylistID,
 	}
 }
 
