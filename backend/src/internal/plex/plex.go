@@ -2,39 +2,41 @@ package plex
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
+	"github.com/CZnavody19/music-manager/plexapi"
+	"github.com/CZnavody19/music-manager/plexapi/options"
 	"github.com/CZnavody19/music-manager/src/db/config"
+	"github.com/CZnavody19/music-manager/src/db/plex"
 	"github.com/CZnavody19/music-manager/src/domain"
-	"github.com/LukeHagar/plexgo"
-	"github.com/LukeHagar/plexgo/models/operations"
 	"github.com/go-jet/jet/v2/qrm"
+	"go.uber.org/zap"
 )
 
 type Plex struct {
 	enabled     bool
 	configStore *config.ConfigStore
 	config      *domain.PlexConfig
-	plex        *plexgo.PlexAPI
+	client      *plexapi.Client
+	plexStore   *plex.PlexStore
 }
 
-func getPlexAPI(cfg *domain.PlexConfig) *plexgo.PlexAPI {
+func getPlexAPI(cfg *domain.PlexConfig) *plexapi.Client {
 	if cfg == nil {
 		return nil
 	}
 
-	plex := plexgo.New(
-		plexgo.WithServerIndex(1),
-		plexgo.WithProtocol(cfg.Protocol),
-		plexgo.WithHost(cfg.Host),
-		plexgo.WithPort(fmt.Sprint(cfg.Port)),
-		plexgo.WithSecurity(cfg.Token),
-	)
+	client := plexapi.NewClient(options.ClientOptions{
+		Protocol: cfg.Protocol,
+		Host:     cfg.Host,
+		Port:     int(cfg.Port),
+		Token:    cfg.Token,
+	})
 
-	return plex
+	return client
 }
 
-func NewPlex(cs *config.ConfigStore) (*Plex, error) {
+func NewPlex(cs *config.ConfigStore, ps *plex.PlexStore) (*Plex, error) {
 	ctx := context.Background()
 
 	config, err := cs.GetPlexConfig(ctx)
@@ -51,7 +53,8 @@ func NewPlex(cs *config.ConfigStore) (*Plex, error) {
 		enabled:     enabled,
 		configStore: cs,
 		config:      config,
-		plex:        getPlexAPI(config),
+		client:      getPlexAPI(config),
+		plexStore:   ps,
 	}, nil
 }
 
@@ -70,7 +73,7 @@ func (p *Plex) Enable(ctx context.Context) error {
 		return err
 	}
 
-	p.plex = getPlexAPI(config)
+	p.client = getPlexAPI(config)
 	p.config = config
 	p.enabled = true
 	return nil
@@ -82,9 +85,66 @@ func (p *Plex) Disable(ctx context.Context) error {
 		return err
 	}
 
-	p.plex = nil
+	p.client = nil
 	p.config = nil
 	p.enabled = false
+	return nil
+}
+
+func (p *Plex) RefreshTracks(ctx context.Context) error {
+	secRes, err := p.client.Content.GetSectionLeaves(ctx, int(p.config.LibraryID))
+	if err != nil {
+		return err
+	}
+
+	var trackIds []string
+	trackMap := make(map[string]domain.PlexTrack)
+	for _, track := range secRes.MediaContainer.Metadata {
+		trackIds = append(trackIds, track.RatingKey)
+
+		id, err := strconv.ParseInt(track.RatingKey, 10, 64)
+		if err != nil {
+			return err
+		}
+
+		trackMap[track.RatingKey] = domain.PlexTrack{
+			ID:       id,
+			Title:    track.Title,
+			Artist:   track.GrandparentTitle,
+			Duration: int64(track.Duration),
+		}
+	}
+
+	metRes, err := p.client.Content.GetMetadataItem(ctx, trackIds)
+	if err != nil {
+		return err
+	}
+
+	var tracks []domain.PlexTrack
+	for _, item := range metRes.MediaContainer.Metadata {
+		track := trackMap[item.RatingKey]
+
+		if len(item.GUID) == 0 {
+			zap.S().Warnf("No GUID found for track ID %d, probably not matched correctly", track.ID)
+			track.Mbid = nil
+		} else {
+			id, err := mapMbid(item.GUID[0].ID)
+			if err != nil {
+				zap.S().Warnf("Failed to map MBID for track ID %d: %v", track.ID, err)
+				track.Mbid = nil
+			} else {
+				track.Mbid = id
+			}
+		}
+
+		tracks = append(tracks, track)
+	}
+
+	err = p.plexStore.StoreTracks(ctx, tracks)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -93,9 +153,10 @@ func (p *Plex) RefreshLibrary(ctx context.Context) error {
 		return nil
 	}
 
-	_, err := p.plex.Library.RefreshSection(ctx, operations.RefreshSectionRequest{
-		SectionID: p.config.LibraryID,
-	})
+	err := p.client.Library.RefreshSection(ctx, int(p.config.LibraryID))
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }

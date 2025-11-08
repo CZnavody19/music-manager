@@ -12,7 +12,7 @@ import (
 
 // Test is the resolver for the test field.
 func (r *mutationResolver) Test(ctx context.Context) (bool, error) {
-	err := r.YouTube.Identify(ctx)
+	err := r.Plex.RefreshTracks(ctx)
 	if err != nil {
 		return false, err
 	}

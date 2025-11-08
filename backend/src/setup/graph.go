@@ -8,6 +8,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/db"
 	configStore "github.com/CZnavody19/music-manager/src/db/config"
 	musicbrainzStore "github.com/CZnavody19/music-manager/src/db/musicbrainz"
+	plexStore "github.com/CZnavody19/music-manager/src/db/plex"
 	youtubeStore "github.com/CZnavody19/music-manager/src/db/youtube"
 	"github.com/CZnavody19/music-manager/src/graph"
 	"github.com/CZnavody19/music-manager/src/graph/generated"
@@ -26,6 +27,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 	configStore := configStore.NewConfigStore(dbConn, dbMapper)
 	youtubeStore := youtubeStore.NewYouTubeStore(dbConn, dbMapper)
 	musibcrainzStore := musicbrainzStore.NewMusicbrainzStore(dbConn, dbMapper)
+	plexStore := plexStore.NewPlexStore(dbConn, dbMapper)
 
 	mb, err := musicbrainz.NewMusicBrainz(musibcrainzStore)
 	if err != nil {
@@ -47,7 +49,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
-	plx, err := plex.NewPlex(configStore)
+	plx, err := plex.NewPlex(configStore, plexStore)
 	if err != nil {
 		return nil, err
 	}
