@@ -19,5 +19,11 @@ func SetupCron(scheduler gocron.Scheduler, resolver *graph.Resolver) error {
 		return err
 	}
 
+	_, err = scheduler.NewJob(gocron.DurationJob(5*time.Minute), gocron.NewTask(resolver.Plex.RefreshLibrary, ctx), options)
+	if err != nil {
+		zap.S().Error("Error setting up cron job", err)
+		return err
+	}
+
 	return nil
 }

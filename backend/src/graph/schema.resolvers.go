@@ -12,7 +12,7 @@ import (
 
 // Test is the resolver for the test field.
 func (r *mutationResolver) Test(ctx context.Context) (bool, error) {
-	err := r.Plex.RefreshTracks(ctx)
+	err := r.Plex.MatchTracks(ctx)
 	if err != nil {
 		return false, err
 	}

@@ -82,3 +82,27 @@ func (m *Mapper) MapYoutubeVideo(input *model.Youtube) *domain.YouTubeVideo {
 		TrackID:       input.TrackID,
 	}
 }
+
+func (m *Mapper) MapPlexTrack(input *model.Plex) *domain.PlexTrack {
+	if input == nil {
+		return nil
+	}
+
+	return &domain.PlexTrack{
+		ID:       int64(input.ID),
+		Title:    input.Title,
+		Artist:   input.Artist,
+		Duration: int64(input.Duration),
+		Mbid:     input.Mbid,
+	}
+}
+
+func (m *Mapper) MapPlexTracks(input []*model.Plex) []*domain.PlexTrack {
+	var out []*domain.PlexTrack
+
+	for _, t := range input {
+		out = append(out, m.MapPlexTrack(t))
+	}
+
+	return out
+}

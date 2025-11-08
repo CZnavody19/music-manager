@@ -27,7 +27,7 @@ func (ms *MusicbrainzStore) StoreTrack(ctx context.Context, track domain.Track) 
 		return err
 	}
 
-	trackStmt := table.Tracks.INSERT(table.Tracks.AllColumns).MODEL(track)
+	trackStmt := table.Tracks.INSERT(table.Tracks.AllColumns).MODEL(track).ON_CONFLICT().DO_NOTHING()
 
 	_, err = trackStmt.ExecContext(ctx, tx)
 	if err != nil {
@@ -35,7 +35,7 @@ func (ms *MusicbrainzStore) StoreTrack(ctx context.Context, track domain.Track) 
 	}
 
 	if len(track.ISRCs) > 0 {
-		isrcStmt := table.TrackIsrcs.INSERT(table.TrackIsrcs.AllColumns).MODELS(mapISRCs(track))
+		isrcStmt := table.TrackIsrcs.INSERT(table.TrackIsrcs.AllColumns).MODELS(mapISRCs(track)).ON_CONFLICT().DO_NOTHING()
 		_, err = isrcStmt.ExecContext(ctx, tx)
 		if err != nil {
 			return err

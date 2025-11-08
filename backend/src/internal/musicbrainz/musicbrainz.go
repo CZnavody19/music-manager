@@ -2,7 +2,7 @@ package musicbrainz
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"github.com/CZnavody19/music-manager/src/db/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/domain"
@@ -14,6 +14,7 @@ type MusicBrainz struct {
 	client      *musicbrainzws2.Client
 	mbStore     *musicbrainz.MusicbrainzStore
 	SearchQueue chan domain.IdentificationRequest
+	MatchQueue  chan domain.MatchRequest
 }
 
 func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore) (*MusicBrainz, error) {
@@ -27,11 +28,13 @@ func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore) (*MusicBrainz, error) {
 		client:      client,
 		mbStore:     mbs,
 		SearchQueue: make(chan domain.IdentificationRequest, 100),
+		MatchQueue:  make(chan domain.MatchRequest, 100),
 	}
 
 	ctx := context.Background()
 
 	go mb.searchWorker(ctx)
+	go mb.matchWorker(ctx)
 
 	return mb, nil
 }
@@ -91,7 +94,48 @@ func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 		}
 
 		zap.S().Infof("Stored MusicBrainz track: %s (similarity: %.2f)", most.ID, mostSim)
+	}
+}
 
-		time.Sleep(1 * time.Second) // Rate limiting
+func (mb *MusicBrainz) matchWorker(ctx context.Context) {
+	zap.S().Info("MusicBrainz match worker started")
+
+	for request := range mb.MatchQueue {
+		zap.S().Info("Processing MusicBrainz match request")
+
+		filter := musicbrainzws2.SearchFilter{
+			Query:    fmt.Sprintf("tid:\"%s\"", request.GetTrackID()),
+			Includes: []string{"isrcs"},
+		}
+		paginator := musicbrainzws2.Paginator{
+			Offset: 0,
+			Limit:  100,
+		}
+
+		res, err := mb.client.SearchRecordings(ctx, filter, paginator)
+		if err != nil {
+			zap.S().Errorf("MusicBrainz match search error: %v", err)
+			continue
+		}
+
+		track, err := mapTrack(res.Recordings[0])
+		if err != nil {
+			zap.S().Errorf("Error mapping MusicBrainz track %s: %v", res.Recordings[0].ID, err)
+			continue
+		}
+
+		err = mb.mbStore.StoreTrack(ctx, track)
+		if err != nil {
+			zap.S().Errorf("Error storing MusicBrainz track %s: %v", res.Recordings[0].ID, err)
+			continue
+		}
+
+		err = request.LinkTrack(ctx, track.ID)
+		if err != nil {
+			zap.S().Errorf("Error linking MusicBrainz track %s: %v", res.Recordings[0].ID, err)
+			continue
+		}
+
+		zap.S().Infof("Stored MusicBrainz track: %s", res.Recordings[0].ID)
 	}
 }

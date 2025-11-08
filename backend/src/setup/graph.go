@@ -49,7 +49,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
-	plx, err := plex.NewPlex(configStore, plexStore)
+	plx, err := plex.NewPlex(configStore, plexStore, mb)
 	if err != nil {
 		return nil, err
 	}

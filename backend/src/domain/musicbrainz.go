@@ -13,6 +13,11 @@ type IdentificationRequest interface {
 	LinkTrack(ctx context.Context, trackID uuid.UUID) error
 }
 
+type MatchRequest interface {
+	GetTrackID() uuid.UUID
+	LinkTrack(ctx context.Context, trackID uuid.UUID) error
+}
+
 type Track struct {
 	ID     uuid.UUID
 	Title  string

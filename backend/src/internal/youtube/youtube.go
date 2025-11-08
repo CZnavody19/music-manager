@@ -122,6 +122,7 @@ func (yt *YouTube) Disable(ctx context.Context) error {
 	return nil
 }
 
+// Gets called by a CRON job
 func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 	if !yt.enabled {
 		return nil
