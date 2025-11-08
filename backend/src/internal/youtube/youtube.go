@@ -3,11 +3,13 @@ package youtube
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/CZnavody19/music-manager/src/db/config"
 	"github.com/CZnavody19/music-manager/src/db/youtube"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/sosodev/duration"
 	"go.uber.org/zap"
@@ -23,6 +25,7 @@ type YouTube struct {
 	config      *domain.YouTubeConfig
 	ytStore     *youtube.YouTubeStore
 	yt          *youtubeApi.Service
+	musicBrainz *musicbrainz.MusicBrainz
 }
 
 func getYtService(ctx context.Context, cfg *domain.YouTubeConfig) (*youtubeApi.Service, error) {
@@ -51,7 +54,7 @@ func getYtService(ctx context.Context, cfg *domain.YouTubeConfig) (*youtubeApi.S
 	return yt, nil
 }
 
-func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore) (*YouTube, error) {
+func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore, mb *musicbrainz.MusicBrainz) (*YouTube, error) {
 	ctx := context.Background()
 
 	config, err := cs.GetYoutubeConfig(ctx)
@@ -75,6 +78,7 @@ func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore) (*YouTube, er
 		config:      config,
 		ytStore:     yts,
 		yt:          service,
+		musicBrainz: mb,
 	}, nil
 }
 
@@ -183,6 +187,35 @@ func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 	}
 
 	zap.S().Info("YouTube playlist refreshed successfully")
+
+	return nil
+}
+
+func (yt *YouTube) GetVideos(ctx context.Context) ([]*domain.YouTubeVideo, error) {
+	if !yt.enabled {
+		return nil, fmt.Errorf("YouTube integration is not enabled")
+	}
+
+	return yt.ytStore.GetVideos(ctx)
+}
+
+func (yt *YouTube) Identify(ctx context.Context) error {
+	if !yt.enabled {
+		return nil
+	}
+
+	zap.S().Info("Starting YouTube video identification process")
+
+	videos, err := yt.ytStore.GetVideos(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, video := range videos {
+		yt.musicBrainz.SearchQueue <- IdentificationRequest{
+			Video: video,
+		}
+	}
 
 	return nil
 }

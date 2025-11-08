@@ -7,6 +7,7 @@ replace go.uber.org/zap => github.com/ziyaozclk/zap v1.19.3-0.20211130062134-0e5
 require (
 	github.com/99designs/gqlgen v0.17.81
 	github.com/XSAM/otelsql v0.40.0
+	github.com/antzucaro/matchr v0.0.0-20221106193745-7bed6ef61ef9
 	github.com/go-co-op/gocron/v2 v2.14.2
 	github.com/go-jet/jet/v2 v2.14.0
 	github.com/gorilla/mux v1.8.0
@@ -22,6 +23,7 @@ require (
 	go.elastic.co/ecszap v1.0.3
 	go.opentelemetry.io/otel/trace v1.38.0
 	go.uber.org/zap v1.27.0
+	go.uploadedlobster.com/musicbrainzws2 v0.17.0
 	golang.org/x/crypto v0.42.0
 	golang.org/x/oauth2 v0.16.0
 	google.golang.org/api v0.149.0
@@ -50,6 +52,7 @@ require (
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-resty/resty/v2 v2.16.5 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
@@ -117,6 +120,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	go.uploadedlobster.com/mbtypes v0.4.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/mod v0.28.0 // indirect

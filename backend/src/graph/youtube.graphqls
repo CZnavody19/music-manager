@@ -1,0 +1,12 @@
+type YouTubeVideo {
+	id: String!
+	title: String!
+	channelTitle: String!
+	thumbnailUrl: String!
+	duration: Int!
+	position: Int!
+}
+
+extend type Query {
+	getVideosInPlaylist: [YouTubeVideo!]!
+}

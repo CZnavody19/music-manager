@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/CZnavody19/music-manager/src/db"
+	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/public/model"
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/public/table"
 	"github.com/CZnavody19/music-manager/src/domain"
 )
@@ -50,4 +51,16 @@ func (yts *YouTubeStore) StoreVideos(ctx context.Context, videos []*domain.YouTu
 	fmt.Printf("Inserted %d new YouTube videos\n", affected)
 
 	return nil
+}
+
+func (yts *YouTubeStore) GetVideos(ctx context.Context) ([]*domain.YouTubeVideo, error) {
+	stmt := table.Youtube.SELECT(table.Youtube.AllColumns).ORDER_BY(table.Youtube.Position.ASC())
+
+	var videos []*model.Youtube
+	err := stmt.QueryContext(ctx, yts.DB, &videos)
+	if err != nil {
+		return nil, err
+	}
+
+	return yts.Mapper.MapYoutubeVideos(videos), nil
 }

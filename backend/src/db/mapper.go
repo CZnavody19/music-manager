@@ -1,7 +1,8 @@
 package db
 
 import (
-	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/config/model"
+	cfgModel "github.com/CZnavody19/music-manager/src/db/gen/musicdb/config/model"
+	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/public/model"
 	"github.com/CZnavody19/music-manager/src/domain"
 )
 
@@ -12,7 +13,7 @@ func NewMapper() *Mapper {
 	return &Mapper{}
 }
 
-func (m *Mapper) MapYouTubeConfig(input *model.Youtube) *domain.YouTubeConfig {
+func (m *Mapper) MapYouTubeConfig(input *cfgModel.Youtube) *domain.YouTubeConfig {
 	return &domain.YouTubeConfig{
 		Enabled:    input.Enabled,
 		OAuth:      input.OAuth,
@@ -21,14 +22,14 @@ func (m *Mapper) MapYouTubeConfig(input *model.Youtube) *domain.YouTubeConfig {
 	}
 }
 
-func (m *Mapper) MapDiscordConfig(input *model.Discord) *domain.DiscordConfig {
+func (m *Mapper) MapDiscordConfig(input *cfgModel.Discord) *domain.DiscordConfig {
 	return &domain.DiscordConfig{
 		Enabled:    input.Enabled,
 		WebhookURL: input.WebhookURL,
 	}
 }
 
-func (m *Mapper) MapPlexConfig(input *model.Plex) *domain.PlexConfig {
+func (m *Mapper) MapPlexConfig(input *cfgModel.Plex) *domain.PlexConfig {
 	return &domain.PlexConfig{
 		Enabled:   input.Enabled,
 		Protocol:  input.Protocol,
@@ -39,16 +40,44 @@ func (m *Mapper) MapPlexConfig(input *model.Plex) *domain.PlexConfig {
 	}
 }
 
-func (m *Mapper) MapGeneralConfig(input *model.General) *domain.GeneralConfig {
+func (m *Mapper) MapGeneralConfig(input *cfgModel.General) *domain.GeneralConfig {
 	return &domain.GeneralConfig{
 		DownloadPath: input.DownloadPath,
 		TempPath:     input.TempPath,
 	}
 }
 
-func (m *Mapper) MapAuthConfig(input *model.Auth) *domain.AuthConfig {
+func (m *Mapper) MapAuthConfig(input *cfgModel.Auth) *domain.AuthConfig {
 	return &domain.AuthConfig{
 		Username:     input.Username,
 		PasswordHash: input.PasswordHash,
+	}
+}
+
+func (m *Mapper) MapYoutubeVideos(input []*model.Youtube) []*domain.YouTubeVideo {
+	var out []*domain.YouTubeVideo
+
+	for _, v := range input {
+		out = append(out, m.MapYoutubeVideo(v))
+	}
+
+	return out
+}
+
+func (m *Mapper) MapYoutubeVideo(input *model.Youtube) *domain.YouTubeVideo {
+	var duration *int64
+	if input.Duration != nil {
+		d := int64(*input.Duration)
+		duration = &d
+	}
+
+	return &domain.YouTubeVideo{
+		VideoID:       input.VideoID,
+		Title:         input.Title,
+		ChannelTitle:  input.ChannelTitle,
+		ThumbnailURL:  input.ThumbnailURL,
+		Duration:      duration,
+		Position:      int64(input.Position),
+		NextPageToken: input.NextPageToken,
 	}
 }

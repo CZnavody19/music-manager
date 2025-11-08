@@ -43,6 +43,15 @@ type ServiceStatus struct {
 	Plex    bool `json:"plex"`
 }
 
+type YouTubeVideo struct {
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	ChannelTitle string `json:"channelTitle"`
+	ThumbnailURL string `json:"thumbnailUrl"`
+	Duration     int64  `json:"duration"`
+	Position     int64  `json:"position"`
+}
+
 type YoutubeConfig struct {
 	PlaylistID string `json:"playlistID"`
 }

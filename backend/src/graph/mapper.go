@@ -33,3 +33,26 @@ func (im *Mapper) MapYoutubeConfig(input *domain.YouTubeConfig) *model.YoutubeCo
 		PlaylistID: input.PlaylistID,
 	}
 }
+
+func (im *Mapper) MapYoutubeVideo(input *domain.YouTubeVideo) *model.YouTubeVideo {
+	if input == nil {
+		return nil
+	}
+
+	return &model.YouTubeVideo{
+		ID:           input.VideoID,
+		Title:        input.Title,
+		ChannelTitle: input.ChannelTitle,
+		ThumbnailURL: *input.ThumbnailURL,
+		Duration:     *input.Duration,
+		Position:     input.Position,
+	}
+}
+
+func (im *Mapper) MapYoutubeVideos(inputs []*domain.YouTubeVideo) []*model.YouTubeVideo {
+	var outputs []*model.YouTubeVideo
+	for _, input := range inputs {
+		outputs = append(outputs, im.MapYoutubeVideo(input))
+	}
+	return outputs
+}

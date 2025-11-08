@@ -13,6 +13,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/http"
 	"github.com/CZnavody19/music-manager/src/internal/auth"
 	"github.com/CZnavody19/music-manager/src/internal/discord"
+	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -24,12 +25,17 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 	configStore := configStore.NewConfigStore(dbConn, dbMapper)
 	youtubeStore := youtubeStore.NewYouTubeStore(dbConn, dbMapper)
 
+	mb, err := musicbrainz.NewMusicBrainz()
+	if err != nil {
+		return nil, err
+	}
+
 	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
 	if err != nil {
 		return nil, err
 	}
 
-	yt, err := youtube.NewYouTube(configStore, youtubeStore)
+	yt, err := youtube.NewYouTube(configStore, youtubeStore, mb)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +58,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 	return &graph.Resolver{
 		Mapper:      graphMapper,
 		InputMapper: graphInputMapper,
+		MusicBrainz: mb,
 		Auth:        auth,
 		YouTube:     yt,
 		Discord:     dsc,
