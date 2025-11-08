@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 	"go.uploadedlobster.com/musicbrainzws2"
 )
@@ -8,6 +10,7 @@ import (
 type IdentificationRequest interface {
 	GetSearchQuery() string
 	GetSimilarityScore(recording *musicbrainzws2.Recording) float64
+	LinkTrack(ctx context.Context, trackID uuid.UUID) error
 }
 
 type Track struct {

@@ -25,6 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 					thumbnailUrl
 					duration
 					position
+					linked
 				}
 			}
 		`,
@@ -32,7 +33,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 	const videos = data?.getVideosInPlaylist;
 
-	videos?.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+	videos?.sort((a, b) => a.position - b.position);
 
 	return { videos };
 }

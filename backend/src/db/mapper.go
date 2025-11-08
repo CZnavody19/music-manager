@@ -79,5 +79,6 @@ func (m *Mapper) MapYoutubeVideo(input *model.Youtube) *domain.YouTubeVideo {
 		Duration:      duration,
 		Position:      int64(input.Position),
 		NextPageToken: input.NextPageToken,
+		TrackID:       input.TrackID,
 	}
 }

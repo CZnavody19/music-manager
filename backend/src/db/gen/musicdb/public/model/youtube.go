@@ -7,6 +7,10 @@
 
 package model
 
+import (
+	"github.com/google/uuid"
+)
+
 type Youtube struct {
 	VideoID       string `sql:"primary_key"`
 	Title         string
@@ -15,4 +19,5 @@ type Youtube struct {
 	Duration      *int32
 	Position      int32
 	NextPageToken string
+	TrackID       *uuid.UUID
 }

@@ -1,5 +1,7 @@
 package domain
 
+import "github.com/google/uuid"
+
 type YouTubeConfig struct {
 	Enabled    bool
 	OAuth      []byte
@@ -15,4 +17,5 @@ type YouTubeVideo struct {
 	Duration      *int64
 	Position      int64
 	NextPageToken string
+	TrackID       *uuid.UUID
 }

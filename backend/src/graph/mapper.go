@@ -39,6 +39,11 @@ func (im *Mapper) MapYoutubeVideo(input *domain.YouTubeVideo) *model.YouTubeVide
 		return nil
 	}
 
+	linked := false
+	if input.TrackID != nil {
+		linked = true
+	}
+
 	return &model.YouTubeVideo{
 		ID:           input.VideoID,
 		Title:        input.Title,
@@ -46,6 +51,7 @@ func (im *Mapper) MapYoutubeVideo(input *domain.YouTubeVideo) *model.YouTubeVide
 		ThumbnailURL: *input.ThumbnailURL,
 		Duration:     *input.Duration,
 		Position:     input.Position,
+		Linked:       linked,
 	}
 }
 

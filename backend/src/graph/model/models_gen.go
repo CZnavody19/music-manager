@@ -50,6 +50,7 @@ type YouTubeVideo struct {
 	ThumbnailURL string `json:"thumbnailUrl"`
 	Duration     int64  `json:"duration"`
 	Position     int64  `json:"position"`
+	Linked       bool   `json:"linked"`
 }
 
 type YoutubeConfig struct {

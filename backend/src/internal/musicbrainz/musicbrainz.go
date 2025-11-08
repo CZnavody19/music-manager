@@ -84,6 +84,12 @@ func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 			continue
 		}
 
+		err = request.LinkTrack(ctx, track.ID)
+		if err != nil {
+			zap.S().Errorf("Error linking MusicBrainz track %s: %v", most.ID, err)
+			continue
+		}
+
 		zap.S().Infof("Stored MusicBrainz track: %s (similarity: %.2f)", most.ID, mostSim)
 
 		time.Sleep(1 * time.Second) // Rate limiting

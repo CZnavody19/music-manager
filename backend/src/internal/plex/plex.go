@@ -3,10 +3,11 @@ package plex
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/CZnavody19/music-manager/src/db/config"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/LukeHagar/plexgo"
+	"github.com/LukeHagar/plexgo/models/operations"
 	"github.com/go-jet/jet/v2/qrm"
 )
 
@@ -14,6 +15,23 @@ type Plex struct {
 	enabled     bool
 	configStore *config.ConfigStore
 	config      *domain.PlexConfig
+	plex        *plexgo.PlexAPI
+}
+
+func getPlexAPI(cfg *domain.PlexConfig) *plexgo.PlexAPI {
+	if cfg == nil {
+		return nil
+	}
+
+	plex := plexgo.New(
+		plexgo.WithServerIndex(1),
+		plexgo.WithProtocol(cfg.Protocol),
+		plexgo.WithHost(cfg.Host),
+		plexgo.WithPort(fmt.Sprint(cfg.Port)),
+		plexgo.WithSecurity(cfg.Token),
+	)
+
+	return plex
 }
 
 func NewPlex(cs *config.ConfigStore) (*Plex, error) {
@@ -33,6 +51,7 @@ func NewPlex(cs *config.ConfigStore) (*Plex, error) {
 		enabled:     enabled,
 		configStore: cs,
 		config:      config,
+		plex:        getPlexAPI(config),
 	}, nil
 }
 
@@ -51,6 +70,7 @@ func (p *Plex) Enable(ctx context.Context) error {
 		return err
 	}
 
+	p.plex = getPlexAPI(config)
 	p.config = config
 	p.enabled = true
 	return nil
@@ -62,6 +82,7 @@ func (p *Plex) Disable(ctx context.Context) error {
 		return err
 	}
 
+	p.plex = nil
 	p.config = nil
 	p.enabled = false
 	return nil
@@ -72,14 +93,9 @@ func (p *Plex) RefreshLibrary(ctx context.Context) error {
 		return nil
 	}
 
-	resp, err := http.Get(fmt.Sprintf("%s://%s:%d/library/sections/%d/refresh?X-Plex-Token=%s", p.config.Protocol, p.config.Host, p.config.Port, p.config.LibraryID, p.config.Token))
-	if err != nil {
-		return err
-	}
+	_, err := p.plex.Library.RefreshSection(ctx, operations.RefreshSectionRequest{
+		SectionID: p.config.LibraryID,
+	})
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("failed to refresh plex library, status code: %d", resp.StatusCode)
-	}
-
-	return nil
+	return err
 }

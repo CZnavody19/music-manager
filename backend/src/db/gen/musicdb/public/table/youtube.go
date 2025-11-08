@@ -24,6 +24,7 @@ type youtubeTable struct {
 	Duration      postgres.ColumnInteger
 	Position      postgres.ColumnInteger
 	NextPageToken postgres.ColumnString
+	TrackID       postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -72,8 +73,9 @@ func newYoutubeTableImpl(schemaName, tableName, alias string) youtubeTable {
 		DurationColumn      = postgres.IntegerColumn("duration")
 		PositionColumn      = postgres.IntegerColumn("position")
 		NextPageTokenColumn = postgres.StringColumn("next_page_token")
-		allColumns          = postgres.ColumnList{VideoIDColumn, TitleColumn, ChannelTitleColumn, ThumbnailURLColumn, DurationColumn, PositionColumn, NextPageTokenColumn}
-		mutableColumns      = postgres.ColumnList{TitleColumn, ChannelTitleColumn, ThumbnailURLColumn, DurationColumn, PositionColumn, NextPageTokenColumn}
+		TrackIDColumn       = postgres.StringColumn("track_id")
+		allColumns          = postgres.ColumnList{VideoIDColumn, TitleColumn, ChannelTitleColumn, ThumbnailURLColumn, DurationColumn, PositionColumn, NextPageTokenColumn, TrackIDColumn}
+		mutableColumns      = postgres.ColumnList{TitleColumn, ChannelTitleColumn, ThumbnailURLColumn, DurationColumn, PositionColumn, NextPageTokenColumn, TrackIDColumn}
 		defaultColumns      = postgres.ColumnList{}
 	)
 
@@ -88,6 +90,7 @@ func newYoutubeTableImpl(schemaName, tableName, alias string) youtubeTable {
 		Duration:      DurationColumn,
 		Position:      PositionColumn,
 		NextPageToken: NextPageTokenColumn,
+		TrackID:       TrackIDColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

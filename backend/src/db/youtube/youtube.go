@@ -9,6 +9,8 @@ import (
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/public/model"
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/public/table"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/go-jet/jet/v2/postgres"
+	"github.com/google/uuid"
 )
 
 type YouTubeStore struct {
@@ -53,8 +55,12 @@ func (yts *YouTubeStore) StoreVideos(ctx context.Context, videos []*domain.YouTu
 	return nil
 }
 
-func (yts *YouTubeStore) GetVideos(ctx context.Context) ([]*domain.YouTubeVideo, error) {
+func (yts *YouTubeStore) GetVideos(ctx context.Context, unmatched bool) ([]*domain.YouTubeVideo, error) {
 	stmt := table.Youtube.SELECT(table.Youtube.AllColumns).ORDER_BY(table.Youtube.Position.ASC())
+
+	if unmatched {
+		stmt = stmt.WHERE(table.Youtube.TrackID.IS_NULL())
+	}
 
 	var videos []*model.Youtube
 	err := stmt.QueryContext(ctx, yts.DB, &videos)
@@ -63,4 +69,19 @@ func (yts *YouTubeStore) GetVideos(ctx context.Context) ([]*domain.YouTubeVideo,
 	}
 
 	return yts.Mapper.MapYoutubeVideos(videos), nil
+}
+
+func (yts *YouTubeStore) LinkTrack(ctx context.Context, videoID string, trackID uuid.UUID) error {
+	stmt := table.Youtube.UPDATE().SET(
+		table.Youtube.TrackID.SET(postgres.UUID(trackID)),
+	).WHERE(
+		table.Youtube.VideoID.EQ(postgres.String(videoID)),
+	)
+
+	_, err := stmt.ExecContext(ctx, yts.DB)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

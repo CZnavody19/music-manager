@@ -196,7 +196,7 @@ func (yt *YouTube) GetVideos(ctx context.Context) ([]*domain.YouTubeVideo, error
 		return nil, fmt.Errorf("YouTube integration is not enabled")
 	}
 
-	return yt.ytStore.GetVideos(ctx)
+	return yt.ytStore.GetVideos(ctx, false)
 }
 
 func (yt *YouTube) Identify(ctx context.Context) error {
@@ -206,14 +206,15 @@ func (yt *YouTube) Identify(ctx context.Context) error {
 
 	zap.S().Info("Starting YouTube video identification process")
 
-	videos, err := yt.ytStore.GetVideos(ctx)
+	videos, err := yt.ytStore.GetVideos(ctx, true)
 	if err != nil {
 		return err
 	}
 
 	for _, video := range videos {
 		yt.musicBrainz.SearchQueue <- IdentificationRequest{
-			Video: video,
+			Video:   video,
+			YtStore: yt.ytStore,
 		}
 	}
 

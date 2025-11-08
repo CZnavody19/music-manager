@@ -5,6 +5,7 @@ type YouTubeVideo {
 	thumbnailUrl: String!
 	duration: Int!
 	position: Int!
+	linked: Boolean!
 }
 
 extend type Query {

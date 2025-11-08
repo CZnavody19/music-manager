@@ -95,6 +95,7 @@ type ComplexityRoot struct {
 		ChannelTitle func(childComplexity int) int
 		Duration     func(childComplexity int) int
 		ID           func(childComplexity int) int
+		Linked       func(childComplexity int) int
 		Position     func(childComplexity int) int
 		ThumbnailURL func(childComplexity int) int
 		Title        func(childComplexity int) int
@@ -365,6 +366,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.YouTubeVideo.ID(childComplexity), true
+	case "YouTubeVideo.linked":
+		if e.complexity.YouTubeVideo.Linked == nil {
+			break
+		}
+
+		return e.complexity.YouTubeVideo.Linked(childComplexity), true
 	case "YouTubeVideo.position":
 		if e.complexity.YouTubeVideo.Position == nil {
 			break
@@ -588,6 +595,7 @@ extend type Mutation {
 	thumbnailUrl: String!
 	duration: Int!
 	position: Int!
+	linked: Boolean!
 }
 
 extend type Query {
@@ -1745,6 +1753,8 @@ func (ec *executionContext) fieldContext_Query_getVideosInPlaylist(_ context.Con
 				return ec.fieldContext_YouTubeVideo_duration(ctx, field)
 			case "position":
 				return ec.fieldContext_YouTubeVideo_position(ctx, field)
+			case "linked":
+				return ec.fieldContext_YouTubeVideo_linked(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type YouTubeVideo", field.Name)
 		},
@@ -2116,6 +2126,35 @@ func (ec *executionContext) fieldContext_YouTubeVideo_position(_ context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YouTubeVideo_linked(ctx context.Context, field graphql.CollectedField, obj *model.YouTubeVideo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_YouTubeVideo_linked,
+		func(ctx context.Context) (any, error) {
+			return obj.Linked, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_YouTubeVideo_linked(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YouTubeVideo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4218,6 +4257,11 @@ func (ec *executionContext) _YouTubeVideo(ctx context.Context, sel ast.Selection
 			}
 		case "position":
 			out.Values[i] = ec._YouTubeVideo_position(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "linked":
+			out.Values[i] = ec._YouTubeVideo_linked(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

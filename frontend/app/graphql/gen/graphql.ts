@@ -123,6 +123,7 @@ export type YouTubeVideo = {
   channelTitle: Scalars['String']['output'];
   duration: Scalars['Int']['output'];
   id: Scalars['String']['output'];
+  linked: Scalars['Boolean']['output'];
   position: Scalars['Int']['output'];
   thumbnailUrl: Scalars['String']['output'];
   title: Scalars['String']['output'];
