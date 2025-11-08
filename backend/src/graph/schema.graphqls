@@ -1,3 +1,5 @@
+scalar UUID
+
 type Query
 
 type Mutation {

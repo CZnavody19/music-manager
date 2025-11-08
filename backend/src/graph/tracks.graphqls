@@ -1,0 +1,11 @@
+type Track {
+    id: UUID!
+    title: String!
+    artist: String!
+    length: Int!
+    isrcs: [String!]!
+}
+
+extend type Query {
+    getTracks: [Track!]!
+}

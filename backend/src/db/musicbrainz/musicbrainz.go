@@ -7,6 +7,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/db"
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/public/table"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/go-jet/jet/v2/postgres"
 )
 
 type MusicbrainzStore struct {
@@ -48,4 +49,17 @@ func (ms *MusicbrainzStore) StoreTrack(ctx context.Context, track domain.Track) 
 	}
 
 	return nil
+}
+
+func (ms *MusicbrainzStore) GetTracks(ctx context.Context) ([]*domain.Track, error) {
+	stmt := postgres.SELECT(table.Tracks.AllColumns, table.TrackIsrcs.AllColumns).FROM(table.Tracks.
+		LEFT_JOIN(table.TrackIsrcs, table.TrackIsrcs.TrackID.EQ(table.Tracks.ID)))
+
+	var dest []db.TrackWithISRCs
+	err := stmt.QueryContext(ctx, ms.DB, &dest)
+	if err != nil {
+		return nil, err
+	}
+
+	return ms.Mapper.MapTracksWithISRCs(dest), nil
 }

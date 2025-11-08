@@ -2,6 +2,10 @@
 
 package model
 
+import (
+	"github.com/google/uuid"
+)
+
 type DiscordConfig struct {
 	WebhookURL string `json:"webhookURL"`
 }
@@ -41,6 +45,14 @@ type ServiceStatus struct {
 	Youtube bool `json:"youtube"`
 	Discord bool `json:"discord"`
 	Plex    bool `json:"plex"`
+}
+
+type Track struct {
+	ID     uuid.UUID `json:"id"`
+	Title  string    `json:"title"`
+	Artist string    `json:"artist"`
+	Length int64     `json:"length"`
+	Isrcs  []string  `json:"isrcs"`
 }
 
 type YouTubeVideo struct {

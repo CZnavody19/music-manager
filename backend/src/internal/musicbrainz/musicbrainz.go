@@ -39,6 +39,10 @@ func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore) (*MusicBrainz, error) {
 	return mb, nil
 }
 
+func (mb *MusicBrainz) GetTracks(ctx context.Context) ([]*domain.Track, error) {
+	return mb.mbStore.GetTracks(ctx)
+}
+
 func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 	zap.S().Info("MusicBrainz search worker started")
 

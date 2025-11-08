@@ -62,3 +62,25 @@ func (im *Mapper) MapYoutubeVideos(inputs []*domain.YouTubeVideo) []*model.YouTu
 	}
 	return outputs
 }
+
+func (im *Mapper) MapTrack(input *domain.Track) *model.Track {
+	if input == nil {
+		return nil
+	}
+
+	return &model.Track{
+		ID:     input.ID,
+		Title:  input.Title,
+		Artist: input.Artist,
+		Length: input.Length,
+		Isrcs:  input.ISRCs,
+	}
+}
+
+func (im *Mapper) MapTracks(inputs []*domain.Track) []*model.Track {
+	var outputs []*model.Track
+	for _, input := range inputs {
+		outputs = append(outputs, im.MapTrack(input))
+	}
+	return outputs
+}

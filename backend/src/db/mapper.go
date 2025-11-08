@@ -106,3 +106,28 @@ func (m *Mapper) MapPlexTracks(input []*model.Plex) []*domain.PlexTrack {
 
 	return out
 }
+
+func (m *Mapper) MapTrackWithISRCs(input TrackWithISRCs) *domain.Track {
+	var isrcs []string
+	for _, isrc := range input.ISRCs {
+		isrcs = append(isrcs, isrc.Isrc)
+	}
+
+	return &domain.Track{
+		ID:     input.ID,
+		Title:  input.Title,
+		Artist: input.Artist,
+		Length: int64(input.Length),
+		ISRCs:  isrcs,
+	}
+}
+
+func (m *Mapper) MapTracksWithISRCs(input []TrackWithISRCs) []*domain.Track {
+	var out []*domain.Track
+
+	for _, t := range input {
+		out = append(out, m.MapTrackWithISRCs(t))
+	}
+
+	return out
+}
