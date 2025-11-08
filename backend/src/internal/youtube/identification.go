@@ -111,6 +111,14 @@ func extractArtistTitle(rawTitle string, channelName string) parsed {
 
 	cleaned := cleanTitle(title)
 
+	if strings.HasSuffix(channelName, " - Topic") {
+		return parsed{
+			Artist:    getArtistName(channelName),
+			Title:     cleaned,
+			Featuring: featured,
+		}
+	}
+
 	if parsed := parseArtistTitle(cleaned); parsed != nil {
 		parsed.Featuring = featured
 		return *parsed

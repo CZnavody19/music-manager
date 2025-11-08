@@ -2,7 +2,9 @@ package musicbrainz
 
 import (
 	"context"
+	"time"
 
+	"github.com/CZnavody19/music-manager/src/db/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/domain"
 	"go.uber.org/zap"
 	"go.uploadedlobster.com/musicbrainzws2"
@@ -10,17 +12,20 @@ import (
 
 type MusicBrainz struct {
 	client      *musicbrainzws2.Client
+	mbStore     *musicbrainz.MusicbrainzStore
 	SearchQueue chan domain.IdentificationRequest
 }
 
-func NewMusicBrainz() (*MusicBrainz, error) {
+func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore) (*MusicBrainz, error) {
 	client := musicbrainzws2.NewClient(musicbrainzws2.AppInfo{
 		Name:    "music-manager",
 		Version: "0.1",
+		URL:     "github.com/CZnavody19/music-manager",
 	})
 
 	mb := &MusicBrainz{
 		client:      client,
+		mbStore:     mbs,
 		SearchQueue: make(chan domain.IdentificationRequest, 100),
 	}
 
@@ -38,6 +43,7 @@ func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 		zap.S().Info("Processing MusicBrainz search request")
 
 		searchStr := request.GetSearchQuery()
+		zap.S().Infof("MusicBrainz search query: %s", searchStr)
 
 		filter := musicbrainzws2.SearchFilter{
 			Query:    searchStr,
@@ -66,6 +72,20 @@ func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 			}
 		}
 
-		zap.S().Infof("Most similar recording: %s (score: %f) [ID: %s]", most.Title, mostSim, most.ID)
+		track, err := mapTrack(most)
+		if err != nil {
+			zap.S().Errorf("Error mapping MusicBrainz track %s: %v", most.ID, err)
+			continue
+		}
+
+		err = mb.mbStore.StoreTrack(ctx, track)
+		if err != nil {
+			zap.S().Errorf("Error storing MusicBrainz track %s: %v", most.ID, err)
+			continue
+		}
+
+		zap.S().Infof("Stored MusicBrainz track: %s (similarity: %.2f)", most.ID, mostSim)
+
+		time.Sleep(1 * time.Second) // Rate limiting
 	}
 }

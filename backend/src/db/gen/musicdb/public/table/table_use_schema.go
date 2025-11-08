@@ -11,5 +11,7 @@ package table
 // this method only once at the beginning of the program.
 func UseSchema(schema string) {
 	GooseDbVersion = GooseDbVersion.FromSchema(schema)
+	TrackIsrcs = TrackIsrcs.FromSchema(schema)
+	Tracks = Tracks.FromSchema(schema)
 	Youtube = Youtube.FromSchema(schema)
 }

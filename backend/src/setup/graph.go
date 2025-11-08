@@ -7,6 +7,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/config"
 	"github.com/CZnavody19/music-manager/src/db"
 	configStore "github.com/CZnavody19/music-manager/src/db/config"
+	musicbrainzStore "github.com/CZnavody19/music-manager/src/db/musicbrainz"
 	youtubeStore "github.com/CZnavody19/music-manager/src/db/youtube"
 	"github.com/CZnavody19/music-manager/src/graph"
 	"github.com/CZnavody19/music-manager/src/graph/generated"
@@ -24,8 +25,9 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 
 	configStore := configStore.NewConfigStore(dbConn, dbMapper)
 	youtubeStore := youtubeStore.NewYouTubeStore(dbConn, dbMapper)
+	musibcrainzStore := musicbrainzStore.NewMusicbrainzStore(dbConn, dbMapper)
 
-	mb, err := musicbrainz.NewMusicBrainz()
+	mb, err := musicbrainz.NewMusicBrainz(musibcrainzStore)
 	if err != nil {
 		return nil, err
 	}
