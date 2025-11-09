@@ -18,6 +18,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/setup"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/nextap-solutions/goNextService"
 	"github.com/nextap-solutions/goNextService/components"
 	"github.com/rs/cors"
@@ -89,6 +90,14 @@ func setupService(configuration *config.Config) (*ServerComponents, error) {
 
 	srv := handler.New(generated.NewExecutableSchema(c))
 	srv.Use(graph.LoggingExtension{})
+	srv.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
+	})
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})

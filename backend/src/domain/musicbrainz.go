@@ -19,9 +19,11 @@ type MatchRequest interface {
 }
 
 type Track struct {
-	ID     uuid.UUID
-	Title  string
-	Artist string
-	Length int64
-	ISRCs  []string
+	ID            uuid.UUID
+	Title         string
+	Artist        string
+	Length        int64
+	ISRCs         []string
+	LinkedYoutube bool
+	LinkedPlex    bool
 }

@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/CZnavody19/music-manager/src/db/config"
 	"github.com/CZnavody19/music-manager/src/db/youtube"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/CZnavody19/music-manager/src/graph/model"
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
+	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/sosodev/duration"
 	"go.uber.org/zap"
@@ -26,6 +29,7 @@ type YouTube struct {
 	ytStore     *youtube.YouTubeStore
 	yt          *youtubeApi.Service
 	musicBrainz *musicbrainz.MusicBrainz
+	websockets  *websockets.Websockets
 }
 
 func getYtService(ctx context.Context, cfg *domain.YouTubeConfig) (*youtubeApi.Service, error) {
@@ -54,7 +58,7 @@ func getYtService(ctx context.Context, cfg *domain.YouTubeConfig) (*youtubeApi.S
 	return yt, nil
 }
 
-func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore, mb *musicbrainz.MusicBrainz) (*YouTube, error) {
+func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore, mb *musicbrainz.MusicBrainz, ws *websockets.Websockets) (*YouTube, error) {
 	ctx := context.Background()
 
 	config, err := cs.GetYoutubeConfig(ctx)
@@ -79,6 +83,7 @@ func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore, mb *musicbrai
 		ytStore:     yts,
 		yt:          service,
 		musicBrainz: mb,
+		websockets:  ws,
 	}, nil
 }
 
@@ -127,6 +132,13 @@ func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 	if !yt.enabled {
 		return nil
 	}
+
+	start := time.Now()
+	yt.websockets.SendTask(&model.Task{
+		Title:     "Refreshing YouTube playlist",
+		StartedAt: start,
+		Ended:     false,
+	})
 
 	zap.S().Info("Refreshing YouTube playlist")
 
@@ -186,6 +198,12 @@ func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	yt.websockets.SendTask(&model.Task{
+		Title:     "Refreshed YouTube playlist",
+		StartedAt: start,
+		Ended:     true,
+	})
 
 	zap.S().Info("YouTube playlist refreshed successfully")
 

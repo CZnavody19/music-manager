@@ -52,8 +52,10 @@ func (ms *MusicbrainzStore) StoreTrack(ctx context.Context, track domain.Track) 
 }
 
 func (ms *MusicbrainzStore) GetTracks(ctx context.Context) ([]*domain.Track, error) {
-	stmt := postgres.SELECT(table.Tracks.AllColumns, table.TrackIsrcs.AllColumns).FROM(table.Tracks.
-		LEFT_JOIN(table.TrackIsrcs, table.TrackIsrcs.TrackID.EQ(table.Tracks.ID)))
+	stmt := postgres.SELECT(table.Tracks.AllColumns, table.TrackIsrcs.AllColumns, table.Youtube.AllColumns, table.Plex.AllColumns).FROM(table.Tracks.
+		LEFT_JOIN(table.TrackIsrcs, table.TrackIsrcs.TrackID.EQ(table.Tracks.ID)).
+		LEFT_JOIN(table.Youtube, table.Youtube.TrackID.EQ(table.Tracks.ID)).
+		LEFT_JOIN(table.Plex, table.Plex.TrackID.EQ(table.Tracks.ID)))
 
 	var dest []db.TrackWithISRCs
 	err := stmt.QueryContext(ctx, ms.DB, &dest)

@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -41,6 +42,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Subscription() SubscriptionResolver
 }
 
 type DirectiveRoot struct {
@@ -62,6 +64,8 @@ type ComplexityRoot struct {
 		EnableYoutube          func(childComplexity int, enable bool) int
 		Login                  func(childComplexity int, input model.LoginInput) int
 		Logout                 func(childComplexity int) int
+		MatchVideo             func(childComplexity int, videoID string, trackID uuid.UUID) int
+		RefreshPlaylist        func(childComplexity int) int
 		RefreshPlexLibrary     func(childComplexity int) int
 		SendTestDiscordMessage func(childComplexity int) int
 		SetDiscordConfig       func(childComplexity int, config model.DiscordConfigInput) int
@@ -93,12 +97,24 @@ type ComplexityRoot struct {
 		Youtube func(childComplexity int) int
 	}
 
+	Subscription struct {
+		Tasks func(childComplexity int) int
+	}
+
+	Task struct {
+		Ended     func(childComplexity int) int
+		StartedAt func(childComplexity int) int
+		Title     func(childComplexity int) int
+	}
+
 	Track struct {
-		Artist func(childComplexity int) int
-		ID     func(childComplexity int) int
-		Isrcs  func(childComplexity int) int
-		Length func(childComplexity int) int
-		Title  func(childComplexity int) int
+		Artist        func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Isrcs         func(childComplexity int) int
+		Length        func(childComplexity int) int
+		LinkedPlex    func(childComplexity int) int
+		LinkedYoutube func(childComplexity int) int
+		Title         func(childComplexity int) int
 	}
 
 	YouTubeVideo struct {
@@ -129,6 +145,8 @@ type MutationResolver interface {
 	EnablePlex(ctx context.Context, enable bool) (bool, error)
 	SendTestDiscordMessage(ctx context.Context) (bool, error)
 	RefreshPlexLibrary(ctx context.Context) (bool, error)
+	RefreshPlaylist(ctx context.Context) (bool, error)
+	MatchVideo(ctx context.Context, videoID string, trackID uuid.UUID) (bool, error)
 }
 type QueryResolver interface {
 	GetDiscordConfig(ctx context.Context) (*model.DiscordConfig, error)
@@ -137,6 +155,9 @@ type QueryResolver interface {
 	GetServiceStatus(ctx context.Context) (*model.ServiceStatus, error)
 	GetTracks(ctx context.Context) ([]*model.Track, error)
 	GetVideosInPlaylist(ctx context.Context) ([]*model.YouTubeVideo, error)
+}
+type SubscriptionResolver interface {
+	Tasks(ctx context.Context) (<-chan *model.Task, error)
 }
 
 type executableSchema struct {
@@ -226,6 +247,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.Logout(childComplexity), true
+	case "Mutation.matchVideo":
+		if e.complexity.Mutation.MatchVideo == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_matchVideo_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MatchVideo(childComplexity, args["videoID"].(string), args["trackID"].(uuid.UUID)), true
+	case "Mutation.refreshPlaylist":
+		if e.complexity.Mutation.RefreshPlaylist == nil {
+			break
+		}
+
+		return e.complexity.Mutation.RefreshPlaylist(childComplexity), true
 	case "Mutation.refreshPlexLibrary":
 		if e.complexity.Mutation.RefreshPlexLibrary == nil {
 			break
@@ -365,6 +403,32 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ServiceStatus.Youtube(childComplexity), true
 
+	case "Subscription.tasks":
+		if e.complexity.Subscription.Tasks == nil {
+			break
+		}
+
+		return e.complexity.Subscription.Tasks(childComplexity), true
+
+	case "Task.ended":
+		if e.complexity.Task.Ended == nil {
+			break
+		}
+
+		return e.complexity.Task.Ended(childComplexity), true
+	case "Task.startedAt":
+		if e.complexity.Task.StartedAt == nil {
+			break
+		}
+
+		return e.complexity.Task.StartedAt(childComplexity), true
+	case "Task.title":
+		if e.complexity.Task.Title == nil {
+			break
+		}
+
+		return e.complexity.Task.Title(childComplexity), true
+
 	case "Track.artist":
 		if e.complexity.Track.Artist == nil {
 			break
@@ -389,6 +453,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Track.Length(childComplexity), true
+	case "Track.linkedPlex":
+		if e.complexity.Track.LinkedPlex == nil {
+			break
+		}
+
+		return e.complexity.Track.LinkedPlex(childComplexity), true
+	case "Track.linkedYoutube":
+		if e.complexity.Track.LinkedYoutube == nil {
+			break
+		}
+
+		return e.complexity.Track.LinkedYoutube(childComplexity), true
 	case "Track.title":
 		if e.complexity.Track.Title == nil {
 			break
@@ -507,6 +583,23 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				Data: buf.Bytes(),
 			}
 		}
+	case ast.Subscription:
+		next := ec._Subscription(ctx, opCtx.Operation.SelectionSet)
+
+		var buf bytes.Buffer
+		return func(ctx context.Context) *graphql.Response {
+			buf.Reset()
+			data := next(ctx)
+
+			if data == nil {
+				return nil
+			}
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
 
 	default:
 		return graphql.OneShot(graphql.ErrorResponse(ctx, "unsupported GraphQL operation"))
@@ -615,11 +708,15 @@ directive @plexEnabled on FIELD_DEFINITION
 directive @youtubeEnabled on FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `scalar UUID
 
+scalar Time
+
 type Query
 
 type Mutation {
     test: Boolean!
-}`, BuiltIn: false},
+}
+
+type Subscription`, BuiltIn: false},
 	{Name: "../services.graphqls", Input: `type ServiceStatus {
     youtube: Boolean!
     discord: Boolean!
@@ -644,10 +741,21 @@ extend type Mutation {
     artist: String!
     length: Int!
     isrcs: [String!]!
+    linkedYoutube: Boolean!
+    linkedPlex: Boolean!
 }
 
 extend type Query {
     getTracks: [Track!]!
+}`, BuiltIn: false},
+	{Name: "../websockets.graphqls", Input: `type Task {
+    title: String!
+    startedAt: Time!
+    ended: Boolean!
+}
+
+extend type Subscription {
+    tasks: Task!
 }`, BuiltIn: false},
 	{Name: "../youtube.graphqls", Input: `type YouTubeVideo {
 	id: String!
@@ -661,6 +769,11 @@ extend type Query {
 
 extend type Query {
 	getVideosInPlaylist: [YouTubeVideo!]!
+}
+
+extend type Mutation {
+	refreshPlaylist: Boolean!
+	matchVideo(videoID: String!, trackID: UUID!): Boolean!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -721,6 +834,22 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_matchVideo_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "videoID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["videoID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "trackID", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["trackID"] = arg1
 	return args, nil
 }
 
@@ -1437,6 +1566,76 @@ func (ec *executionContext) fieldContext_Mutation_refreshPlexLibrary(_ context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_refreshPlaylist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_refreshPlaylist,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().RefreshPlaylist(ctx)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_refreshPlaylist(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_matchVideo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_matchVideo,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().MatchVideo(ctx, fc.Args["videoID"].(string), fc.Args["trackID"].(uuid.UUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_matchVideo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_matchVideo_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PlexConfig_protocol(ctx context.Context, field graphql.CollectedField, obj *model.PlexConfig) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1812,6 +2011,10 @@ func (ec *executionContext) fieldContext_Query_getTracks(_ context.Context, fiel
 				return ec.fieldContext_Track_length(ctx, field)
 			case "isrcs":
 				return ec.fieldContext_Track_isrcs(ctx, field)
+			case "linkedYoutube":
+				return ec.fieldContext_Track_linkedYoutube(ctx, field)
+			case "linkedPlex":
+				return ec.fieldContext_Track_linkedPlex(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Track", field.Name)
 		},
@@ -2059,6 +2262,130 @@ func (ec *executionContext) fieldContext_ServiceStatus_plex(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Subscription_tasks(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	return graphql.ResolveFieldStream(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Subscription_tasks,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Subscription().Tasks(ctx)
+		},
+		nil,
+		ec.marshalNTask2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTask,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Subscription_tasks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "title":
+				return ec.fieldContext_Task_title(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Task_startedAt(ctx, field)
+			case "ended":
+				return ec.fieldContext_Task_ended(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Task_title(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Task_title,
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Task_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Task",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Task_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Task_startedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.StartedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Task_startedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Task",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Task_ended(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Task_ended,
+		func(ctx context.Context) (any, error) {
+			return obj.Ended, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Task_ended(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Task",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Track_id(ctx context.Context, field graphql.CollectedField, obj *model.Track) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2199,6 +2526,64 @@ func (ec *executionContext) fieldContext_Track_isrcs(_ context.Context, field gr
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Track_linkedYoutube(ctx context.Context, field graphql.CollectedField, obj *model.Track) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Track_linkedYoutube,
+		func(ctx context.Context) (any, error) {
+			return obj.LinkedYoutube, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Track_linkedYoutube(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Track",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Track_linkedPlex(ctx context.Context, field graphql.CollectedField, obj *model.Track) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Track_linkedPlex,
+		func(ctx context.Context) (any, error) {
+			return obj.LinkedPlex, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Track_linkedPlex(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Track",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4175,6 +4560,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "refreshPlaylist":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_refreshPlaylist(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "matchVideo":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_matchVideo(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4488,6 +4887,75 @@ func (ec *executionContext) _ServiceStatus(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var subscriptionImplementors = []string{"Subscription"}
+
+func (ec *executionContext) _Subscription(ctx context.Context, sel ast.SelectionSet) func(ctx context.Context) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subscriptionImplementors)
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Subscription",
+	})
+	if len(fields) != 1 {
+		ec.Errorf(ctx, "must subscribe to exactly one stream")
+		return nil
+	}
+
+	switch fields[0].Name {
+	case "tasks":
+		return ec._Subscription_tasks(ctx, fields[0])
+	default:
+		panic("unknown field " + strconv.Quote(fields[0].Name))
+	}
+}
+
+var taskImplementors = []string{"Task"}
+
+func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj *model.Task) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, taskImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Task")
+		case "title":
+			out.Values[i] = ec._Task_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startedAt":
+			out.Values[i] = ec._Task_startedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ended":
+			out.Values[i] = ec._Task_ended(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var trackImplementors = []string{"Track"}
 
 func (ec *executionContext) _Track(ctx context.Context, sel ast.SelectionSet, obj *model.Track) graphql.Marshaler {
@@ -4521,6 +4989,16 @@ func (ec *executionContext) _Track(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "isrcs":
 			out.Values[i] = ec._Track_isrcs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "linkedYoutube":
+			out.Values[i] = ec._Track_linkedYoutube(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "linkedPlex":
+			out.Values[i] = ec._Track_linkedPlex(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5123,6 +5601,36 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNTask2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v model.Task) graphql.Marshaler {
+	return ec._Task(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTask2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v *model.Task) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Task(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNTrack2ᚕᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTrackᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Track) graphql.Marshaler {

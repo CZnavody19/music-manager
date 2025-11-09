@@ -17,6 +17,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/discord"
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
+	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -29,6 +30,11 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 	musibcrainzStore := musicbrainzStore.NewMusicbrainzStore(dbConn, dbMapper)
 	plexStore := plexStore.NewPlexStore(dbConn, dbMapper)
 
+	ws, err := websockets.NewWebsockets()
+	if err != nil {
+		return nil, err
+	}
+
 	mb, err := musicbrainz.NewMusicBrainz(musibcrainzStore)
 	if err != nil {
 		return nil, err
@@ -39,7 +45,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
-	yt, err := youtube.NewYouTube(configStore, youtubeStore, mb)
+	yt, err := youtube.NewYouTube(configStore, youtubeStore, mb, ws)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +73,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		YouTube:     yt,
 		Discord:     dsc,
 		Plex:        plx,
+		Websockets:  ws,
 		HttpHandler: httpHandler,
 		ConfigStore: configStore,
 	}, nil

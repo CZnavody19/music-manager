@@ -69,11 +69,13 @@ func (im *Mapper) MapTrack(input *domain.Track) *model.Track {
 	}
 
 	return &model.Track{
-		ID:     input.ID,
-		Title:  input.Title,
-		Artist: input.Artist,
-		Length: input.Length,
-		Isrcs:  input.ISRCs,
+		ID:            input.ID,
+		Title:         input.Title,
+		Artist:        input.Artist,
+		Length:        input.Length,
+		Isrcs:         input.ISRCs,
+		LinkedYoutube: input.LinkedYoutube,
+		LinkedPlex:    input.LinkedPlex,
 	}
 }
 

@@ -4,6 +4,8 @@ type Track {
     artist: String!
     length: Int!
     isrcs: [String!]!
+    linkedYoutube: Boolean!
+    linkedPlex: Boolean!
 }
 
 extend type Query {

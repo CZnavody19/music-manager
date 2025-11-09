@@ -1,9 +1,11 @@
-import { isRouteErrorResponse, Links, Meta, Outlet, redirect, Scripts, ScrollRestoration } from "react-router";
+import { isRouteErrorResponse, Links, Meta, Outlet, redirect, Scripts, ScrollRestoration, useRouteLoaderData } from "react-router";
+import { ApolloProvider } from "@apollo/client/react";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Navbar } from "~/components/navbar";
 import { Toaster } from "~/components/ui/sonner";
 import { getSession } from "~/.server/session";
+import { getGQLWebsocketClient } from "~/lib/apollo";
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -34,7 +36,14 @@ export const middleware: Route.MiddlewareFunction[] = [
 	},
 ];
 
+export async function loader() {
+	return { apiURL: "ws://localhost:8080" }
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
+	const { apiURL } = useRouteLoaderData("root");
+	const client = getGQLWebsocketClient(apiURL);
+
 	return (
 		<html lang="en" className="dark">
 			<head>
@@ -45,8 +54,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<div className="flex flex-col min-h-screen">
-					<Navbar />
-					{children}
+					<ApolloProvider client={client}>
+						<Navbar />
+						{children}
+					</ApolloProvider>
 				</div>
 				<Toaster />
 				<ScrollRestoration />

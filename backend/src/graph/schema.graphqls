@@ -1,7 +1,11 @@
 scalar UUID
 
+scalar Time
+
 type Query
 
 type Mutation {
     test: Boolean!
 }
+
+type Subscription

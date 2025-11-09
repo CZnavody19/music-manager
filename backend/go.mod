@@ -12,6 +12,7 @@ require (
 	github.com/go-jet/jet/v2 v2.14.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/websocket v1.5.0
 	github.com/lib/pq v1.10.9
 	github.com/nextap-solutions/goNextService v0.1.5
 	github.com/pressly/goose/v3 v3.26.0
@@ -65,7 +66,6 @@ require (
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.14.3 // indirect

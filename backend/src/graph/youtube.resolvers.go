@@ -6,9 +6,26 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/CZnavody19/music-manager/src/graph/model"
+	"github.com/google/uuid"
 )
+
+// RefreshPlaylist is the resolver for the refreshPlaylist field.
+func (r *mutationResolver) RefreshPlaylist(ctx context.Context) (bool, error) {
+	err := r.YouTube.RefreshPlaylist(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// MatchVideo is the resolver for the matchVideo field.
+func (r *mutationResolver) MatchVideo(ctx context.Context, videoID string, trackID uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: MatchVideo - matchVideo"))
+}
 
 // GetVideosInPlaylist is the resolver for the getVideosInPlaylist field.
 func (r *queryResolver) GetVideosInPlaylist(ctx context.Context) ([]*model.YouTubeVideo, error) {

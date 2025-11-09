@@ -13,6 +13,8 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  Time: { input: string; output: string; }
+  UUID: { input: any; output: any; }
 };
 
 export type DiscordConfig = {
@@ -37,6 +39,8 @@ export type Mutation = {
   enableYoutube: Scalars['Boolean']['output'];
   login: Scalars['String']['output'];
   logout: Scalars['Boolean']['output'];
+  matchVideo: Scalars['Boolean']['output'];
+  refreshPlaylist: Scalars['Boolean']['output'];
   refreshPlexLibrary: Scalars['Boolean']['output'];
   sendTestDiscordMessage: Scalars['Boolean']['output'];
   setDiscordConfig: Scalars['Boolean']['output'];
@@ -68,6 +72,12 @@ export type MutationEnableYoutubeArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+
+export type MutationMatchVideoArgs = {
+  trackID: Scalars['UUID']['input'];
+  videoID: Scalars['String']['input'];
 };
 
 
@@ -107,6 +117,7 @@ export type Query = {
   getDiscordConfig: DiscordConfig;
   getPlexConfig: PlexConfig;
   getServiceStatus: ServiceStatus;
+  getTracks: Array<Track>;
   getVideosInPlaylist: Array<YouTubeVideo>;
   getYoutubeConfig: YoutubeConfig;
 };
@@ -116,6 +127,29 @@ export type ServiceStatus = {
   discord: Scalars['Boolean']['output'];
   plex: Scalars['Boolean']['output'];
   youtube: Scalars['Boolean']['output'];
+};
+
+export type Subscription = {
+  __typename?: 'Subscription';
+  tasks: Task;
+};
+
+export type Task = {
+  __typename?: 'Task';
+  ended: Scalars['Boolean']['output'];
+  startedAt: Scalars['Time']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type Track = {
+  __typename?: 'Track';
+  artist: Scalars['String']['output'];
+  id: Scalars['UUID']['output'];
+  isrcs: Array<Scalars['String']['output']>;
+  length: Scalars['Int']['output'];
+  linkedPlex: Scalars['Boolean']['output'];
+  linkedYoutube: Scalars['Boolean']['output'];
+  title: Scalars['String']['output'];
 };
 
 export type YouTubeVideo = {

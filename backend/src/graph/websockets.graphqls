@@ -1,0 +1,9 @@
+type Task {
+    title: String!
+    startedAt: Time!
+    ended: Boolean!
+}
+
+extend type Subscription {
+    tasks: Task!
+}

@@ -3,6 +3,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -47,12 +49,23 @@ type ServiceStatus struct {
 	Plex    bool `json:"plex"`
 }
 
+type Subscription struct {
+}
+
+type Task struct {
+	Title     string    `json:"title"`
+	StartedAt time.Time `json:"startedAt"`
+	Ended     bool      `json:"ended"`
+}
+
 type Track struct {
-	ID     uuid.UUID `json:"id"`
-	Title  string    `json:"title"`
-	Artist string    `json:"artist"`
-	Length int64     `json:"length"`
-	Isrcs  []string  `json:"isrcs"`
+	ID            uuid.UUID `json:"id"`
+	Title         string    `json:"title"`
+	Artist        string    `json:"artist"`
+	Length        int64     `json:"length"`
+	Isrcs         []string  `json:"isrcs"`
+	LinkedYoutube bool      `json:"linkedYoutube"`
+	LinkedPlex    bool      `json:"linkedPlex"`
 }
 
 type YouTubeVideo struct {
