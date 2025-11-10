@@ -20,3 +20,7 @@ export const AuthSchema = z.object({
 export const YouTubeSettingsSchema = z.object({
     playlistID: z.string().min(1, "Playlist ID is required."),
 });
+
+export const YouTubeMatchSchema = z.object({
+    trackId: z.uuidv4("Recording ID must be a valid UUID."),
+});

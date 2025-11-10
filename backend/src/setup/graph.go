@@ -16,6 +16,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/auth"
 	"github.com/CZnavody19/music-manager/src/internal/discord"
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
+	"github.com/CZnavody19/music-manager/src/internal/orchestration"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
@@ -30,17 +31,22 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 	musibcrainzStore := musicbrainzStore.NewMusicbrainzStore(dbConn, dbMapper)
 	plexStore := plexStore.NewPlexStore(dbConn, dbMapper)
 
+	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
+	if err != nil {
+		return nil, err
+	}
+
 	ws, err := websockets.NewWebsockets()
 	if err != nil {
 		return nil, err
 	}
 
-	mb, err := musicbrainz.NewMusicBrainz(musibcrainzStore)
+	mb, err := musicbrainz.NewMusicBrainz(musibcrainzStore, ws)
 	if err != nil {
 		return nil, err
 	}
 
-	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
+	plx, err := plex.NewPlex(configStore, plexStore, mb, ws)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +61,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
-	plx, err := plex.NewPlex(configStore, plexStore, mb)
+	orch, err := orchestration.NewOrchestrator(plx, yt)
 	if err != nil {
 		return nil, err
 	}
@@ -66,16 +72,17 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 	graphInputMapper := graph.NewInputMapper()
 
 	return &graph.Resolver{
-		Mapper:      graphMapper,
-		InputMapper: graphInputMapper,
-		MusicBrainz: mb,
-		Auth:        auth,
-		YouTube:     yt,
-		Discord:     dsc,
-		Plex:        plx,
-		Websockets:  ws,
-		HttpHandler: httpHandler,
-		ConfigStore: configStore,
+		Mapper:       graphMapper,
+		InputMapper:  graphInputMapper,
+		MusicBrainz:  mb,
+		Auth:         auth,
+		YouTube:      yt,
+		Discord:      dsc,
+		Plex:         plx,
+		Orchestrator: orch,
+		Websockets:   ws,
+		HttpHandler:  httpHandler,
+		ConfigStore:  configStore,
 	}, nil
 }
 

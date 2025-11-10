@@ -14,5 +14,4 @@ extend type Mutation {
     enablePlex(enable: Boolean!): Boolean! @auth
 
     sendTestDiscordMessage: Boolean! @auth @discordEnabled
-    refreshPlexLibrary: Boolean! @auth @plexEnabled
 }

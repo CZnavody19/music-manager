@@ -3,13 +3,16 @@ package plex
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/CZnavody19/music-manager/plexapi"
 	"github.com/CZnavody19/music-manager/plexapi/options"
 	"github.com/CZnavody19/music-manager/src/db/config"
 	"github.com/CZnavody19/music-manager/src/db/plex"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/CZnavody19/music-manager/src/graph/model"
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
+	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/go-jet/jet/v2/qrm"
 	"go.uber.org/zap"
 )
@@ -19,6 +22,7 @@ type Plex struct {
 	configStore *config.ConfigStore
 	config      *domain.PlexConfig
 	client      *plexapi.Client
+	websockets  *websockets.Websockets
 	plexStore   *plex.PlexStore
 	musicBrainz *musicbrainz.MusicBrainz
 }
@@ -38,7 +42,7 @@ func getPlexAPI(cfg *domain.PlexConfig) *plexapi.Client {
 	return client
 }
 
-func NewPlex(cs *config.ConfigStore, ps *plex.PlexStore, mb *musicbrainz.MusicBrainz) (*Plex, error) {
+func NewPlex(cs *config.ConfigStore, ps *plex.PlexStore, mb *musicbrainz.MusicBrainz, ws *websockets.Websockets) (*Plex, error) {
 	ctx := context.Background()
 
 	config, err := cs.GetPlexConfig(ctx)
@@ -56,6 +60,7 @@ func NewPlex(cs *config.ConfigStore, ps *plex.PlexStore, mb *musicbrainz.MusicBr
 		configStore: cs,
 		config:      config,
 		client:      getPlexAPI(config),
+		websockets:  ws,
 		plexStore:   ps,
 		musicBrainz: mb,
 	}, nil
@@ -94,11 +99,32 @@ func (p *Plex) Disable(ctx context.Context) error {
 	return nil
 }
 
-// Gets called by a CRON job
+func (p *Plex) GetTracks(ctx context.Context) ([]*domain.PlexTrack, error) {
+	if !p.enabled {
+		return nil, nil
+	}
+
+	tracks, err := p.plexStore.GetTracks(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return tracks, nil
+}
+
 func (p *Plex) RefreshTracks(ctx context.Context) error {
 	if !p.enabled {
 		return nil
 	}
+
+	start := time.Now()
+	p.websockets.SendTask(&model.Task{
+		Title:     "Refreshing Plex library",
+		StartedAt: start,
+		Ended:     false,
+	})
+
+	zap.S().Info("Refreshing Plex tracks")
 
 	secRes, err := p.client.Content.GetSectionLeaves(ctx, int(p.config.LibraryID))
 	if err != nil {
@@ -153,6 +179,25 @@ func (p *Plex) RefreshTracks(ctx context.Context) error {
 		return err
 	}
 
+	for _, track := range tracks {
+		if track.Mbid == nil {
+			continue
+		}
+
+		p.musicBrainz.MatchQueue <- MatchRequest{
+			track:     &track,
+			plexStore: p.plexStore,
+		}
+	}
+
+	p.websockets.SendTask(&model.Task{
+		Title:     "Refreshing Plex library",
+		StartedAt: start,
+		Ended:     true,
+	})
+
+	zap.S().Infof("Refreshed %d Plex tracks", len(tracks))
+
 	return nil
 }
 
@@ -164,30 +209,6 @@ func (p *Plex) RefreshLibrary(ctx context.Context) error {
 	err := p.client.Library.RefreshSection(ctx, int(p.config.LibraryID))
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (p *Plex) MatchTracks(ctx context.Context) error {
-	if !p.enabled {
-		return nil
-	}
-
-	tracks, err := p.plexStore.GetTracks(ctx, true)
-	if err != nil {
-		return err
-	}
-
-	for _, track := range tracks {
-		if track.Mbid == nil {
-			continue
-		}
-
-		p.musicBrainz.MatchQueue <- MatchRequest{
-			track:     track,
-			plexStore: p.plexStore,
-		}
 	}
 
 	return nil

@@ -2,7 +2,9 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
     index("routes/dashboard.tsx"),
-    route("sources", "routes/sources.tsx"),
+    route("sources", "routes/sources.tsx", [
+        route("match/:videoId", "routes/matching/youtube.tsx"),
+    ]),
     route("integrations", "routes/integrations.tsx"),
     route("services", "routes/services.tsx"),
     route("settings", "layouts/settings.tsx", [

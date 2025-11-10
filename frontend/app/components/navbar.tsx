@@ -2,12 +2,13 @@ import { gql } from "@apollo/client";
 import { useSubscription } from "@apollo/client/react";
 import { Check, Music4, RefreshCw } from "lucide-react"
 import { useEffect, useState } from "react";
-import { Link } from "react-router"
+import { Link, useRevalidator } from "react-router"
 import { Button } from "~/components/ui/button"
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "~/components/ui/navigation-menu"
 import type { Subscription, Task } from "~/graphql/gen/graphql";
 
 export function Navbar() {
+    const { revalidate } = useRevalidator();
     const [task, setTask] = useState<Task | null>(null);
     const [startTime, setStartTime] = useState<number>(0);
     const [time, setTime] = useState<number>(0);
@@ -25,6 +26,7 @@ export function Navbar() {
             if (data.data?.tasks && !data.data?.tasks.ended) {
                 setStartTime(new Date(data.data.tasks.startedAt).getTime());
             } else {
+                revalidate();
                 setStartTime(0);
                 setTimeout(() => {
                     setTime(0);

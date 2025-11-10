@@ -9,5 +9,5 @@ type Track {
 }
 
 extend type Query {
-    getTracks: [Track!]!
+    getTracks: [Track!]! @auth
 }

@@ -12,7 +12,7 @@ import (
 
 // GetTracks is the resolver for the getTracks field.
 func (r *queryResolver) GetTracks(ctx context.Context) ([]*model.Track, error) {
-	tracks, err := r.MusicBrainz.GetTracks(ctx)
+	tracks, err := r.MusicBrainz.GetTracks(ctx, false)
 	if err != nil {
 		return nil, err
 	}

@@ -40,6 +40,15 @@ type PlexConfigInput struct {
 	LibraryID int64  `json:"libraryID"`
 }
 
+type PlexTrack struct {
+	ID       int64      `json:"id"`
+	Title    string     `json:"title"`
+	Artist   string     `json:"artist"`
+	Duration int64      `json:"duration"`
+	Mbid     *uuid.UUID `json:"mbid,omitempty"`
+	TrackID  *uuid.UUID `json:"trackID,omitempty"`
+}
+
 type Query struct {
 }
 

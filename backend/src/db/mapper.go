@@ -94,6 +94,7 @@ func (m *Mapper) MapPlexTrack(input *model.Plex) *domain.PlexTrack {
 		Artist:   input.Artist,
 		Duration: int64(input.Duration),
 		Mbid:     input.Mbid,
+		TrackID:  input.TrackID,
 	}
 }
 
@@ -113,22 +114,14 @@ func (m *Mapper) MapTrackWithISRCs(input TrackWithISRCs) *domain.Track {
 		isrcs = append(isrcs, isrc.Isrc)
 	}
 
-	var youtube, plex bool
-	if input.Youtube != nil {
-		youtube = true
-	}
-	if input.Plex != nil {
-		plex = true
-	}
-
 	return &domain.Track{
 		ID:            input.ID,
 		Title:         input.Title,
 		Artist:        input.Artist,
 		Length:        int64(input.Length),
 		ISRCs:         isrcs,
-		LinkedYoutube: youtube,
-		LinkedPlex:    plex,
+		LinkedYoutube: input.YoutubeExists,
+		LinkedPlex:    input.PlexExists,
 	}
 }
 

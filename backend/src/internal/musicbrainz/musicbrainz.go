@@ -3,9 +3,12 @@ package musicbrainz
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/CZnavody19/music-manager/src/db/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/CZnavody19/music-manager/src/graph/model"
+	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"go.uber.org/zap"
 	"go.uploadedlobster.com/musicbrainzws2"
 )
@@ -13,11 +16,12 @@ import (
 type MusicBrainz struct {
 	client      *musicbrainzws2.Client
 	mbStore     *musicbrainz.MusicbrainzStore
+	websockets  *websockets.Websockets
 	SearchQueue chan domain.IdentificationRequest
 	MatchQueue  chan domain.MatchRequest
 }
 
-func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore) (*MusicBrainz, error) {
+func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore, ws *websockets.Websockets) (*MusicBrainz, error) {
 	client := musicbrainzws2.NewClient(musicbrainzws2.AppInfo{
 		Name:    "music-manager",
 		Version: "0.1",
@@ -27,6 +31,7 @@ func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore) (*MusicBrainz, error) {
 	mb := &MusicBrainz{
 		client:      client,
 		mbStore:     mbs,
+		websockets:  ws,
 		SearchQueue: make(chan domain.IdentificationRequest, 100),
 		MatchQueue:  make(chan domain.MatchRequest, 100),
 	}
@@ -39,14 +44,22 @@ func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore) (*MusicBrainz, error) {
 	return mb, nil
 }
 
-func (mb *MusicBrainz) GetTracks(ctx context.Context) ([]*domain.Track, error) {
-	return mb.mbStore.GetTracks(ctx)
+func (mb *MusicBrainz) GetTracks(ctx context.Context, notDownloaded bool) ([]*domain.Track, error) {
+	return mb.mbStore.GetTracks(ctx, notDownloaded)
 }
 
 func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 	zap.S().Info("MusicBrainz search worker started")
 
 	for request := range mb.SearchQueue {
+		start := time.Now()
+
+		mb.websockets.SendTask(&model.Task{
+			Title:     "Processing MusicBrainz search request",
+			StartedAt: start,
+			Ended:     false,
+		})
+
 		zap.S().Info("Processing MusicBrainz search request")
 
 		searchStr := request.GetSearchQuery()
@@ -97,6 +110,12 @@ func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 			continue
 		}
 
+		mb.websockets.SendTask(&model.Task{
+			Title:     "Processing MusicBrainz search request",
+			StartedAt: start,
+			Ended:     true,
+		})
+
 		zap.S().Infof("Stored MusicBrainz track: %s (similarity: %.2f)", most.ID, mostSim)
 	}
 }
@@ -105,6 +124,14 @@ func (mb *MusicBrainz) matchWorker(ctx context.Context) {
 	zap.S().Info("MusicBrainz match worker started")
 
 	for request := range mb.MatchQueue {
+		start := time.Now()
+
+		mb.websockets.SendTask(&model.Task{
+			Title:     "Processing MusicBrainz match request",
+			StartedAt: start,
+			Ended:     false,
+		})
+
 		zap.S().Info("Processing MusicBrainz match request")
 
 		filter := musicbrainzws2.SearchFilter{
@@ -139,6 +166,12 @@ func (mb *MusicBrainz) matchWorker(ctx context.Context) {
 			zap.S().Errorf("Error linking MusicBrainz track %s: %v", res.Recordings[0].ID, err)
 			continue
 		}
+
+		mb.websockets.SendTask(&model.Task{
+			Title:     "Processing MusicBrainz match request",
+			StartedAt: start,
+			Ended:     true,
+		})
 
 		zap.S().Infof("Stored MusicBrainz track: %s", res.Recordings[0].ID)
 	}

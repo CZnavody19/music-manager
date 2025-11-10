@@ -51,11 +51,16 @@ func (ms *MusicbrainzStore) StoreTrack(ctx context.Context, track domain.Track) 
 	return nil
 }
 
-func (ms *MusicbrainzStore) GetTracks(ctx context.Context) ([]*domain.Track, error) {
-	stmt := postgres.SELECT(table.Tracks.AllColumns, table.TrackIsrcs.AllColumns, table.Youtube.AllColumns, table.Plex.AllColumns).FROM(table.Tracks.
-		LEFT_JOIN(table.TrackIsrcs, table.TrackIsrcs.TrackID.EQ(table.Tracks.ID)).
-		LEFT_JOIN(table.Youtube, table.Youtube.TrackID.EQ(table.Tracks.ID)).
-		LEFT_JOIN(table.Plex, table.Plex.TrackID.EQ(table.Tracks.ID)))
+func (ms *MusicbrainzStore) GetTracks(ctx context.Context, notDownloaded bool) ([]*domain.Track, error) {
+	ytStmt := postgres.EXISTS(table.Youtube.SELECT(table.Youtube.VideoID).WHERE(table.Youtube.TrackID.EQ(table.Tracks.ID)))
+	plexStmt := postgres.EXISTS(table.Plex.SELECT(table.Plex.ID).WHERE(table.Plex.TrackID.EQ(table.Tracks.ID)))
+
+	stmt := postgres.SELECT(table.Tracks.AllColumns, table.TrackIsrcs.AllColumns, ytStmt.AS("trackwithisrcs.youtube_exists"), plexStmt.AS("trackwithisrcs.plex_exists")).FROM(table.Tracks.
+		LEFT_JOIN(table.TrackIsrcs, table.TrackIsrcs.TrackID.EQ(table.Tracks.ID)))
+
+	if notDownloaded {
+		stmt = stmt.WHERE(plexStmt.IS_FALSE())
+	}
 
 	var dest []db.TrackWithISRCs
 	err := stmt.QueryContext(ctx, ms.DB, &dest)

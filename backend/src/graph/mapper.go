@@ -86,3 +86,26 @@ func (im *Mapper) MapTracks(inputs []*domain.Track) []*model.Track {
 	}
 	return outputs
 }
+
+func (im *Mapper) MapPlexTrack(input *domain.PlexTrack) *model.PlexTrack {
+	if input == nil {
+		return nil
+	}
+
+	return &model.PlexTrack{
+		ID:       input.ID,
+		Title:    input.Title,
+		Artist:   input.Artist,
+		Duration: input.Duration,
+		Mbid:     input.Mbid,
+		TrackID:  input.TrackID,
+	}
+}
+
+func (im *Mapper) MapPlexTracks(inputs []*domain.PlexTrack) []*model.PlexTrack {
+	var outputs []*model.PlexTrack
+	for _, input := range inputs {
+		outputs = append(outputs, im.MapPlexTrack(input))
+	}
+	return outputs
+}

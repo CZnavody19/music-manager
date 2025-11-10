@@ -89,16 +89,6 @@ func (r *mutationResolver) SendTestDiscordMessage(ctx context.Context) (bool, er
 	return true, nil
 }
 
-// RefreshPlexLibrary is the resolver for the refreshPlexLibrary field.
-func (r *mutationResolver) RefreshPlexLibrary(ctx context.Context) (bool, error) {
-	err := r.Plex.RefreshLibrary(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
 // GetServiceStatus is the resolver for the getServiceStatus field.
 func (r *queryResolver) GetServiceStatus(ctx context.Context) (*model.ServiceStatus, error) {
 	return &model.ServiceStatus{

@@ -44,13 +44,6 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 					</div>
 				</div>
 				<TrackTable tracks={loaderData.tracks} />
-				{/* <ScrollArea className="h-[calc(100vh-8.75rem)] w-full">
-					<div className="flex flex-col gap-4">
-						{loaderData.tracks?.map((track) => (
-							<TrackCard key={track.id} track={track} />
-						))}
-					</div>
-				</ScrollArea> */}
 			</div>
 		</div>
 	)

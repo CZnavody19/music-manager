@@ -71,6 +71,18 @@ func (yts *YouTubeStore) GetVideos(ctx context.Context, unmatched bool) ([]*doma
 	return yts.Mapper.MapYoutubeVideos(videos), nil
 }
 
+func (yts *YouTubeStore) GetVideoByID(ctx context.Context, id string) (*domain.YouTubeVideo, error) {
+	stmt := table.Youtube.SELECT(table.Youtube.AllColumns).WHERE(table.Youtube.VideoID.EQ(postgres.String(id)))
+
+	var video model.Youtube
+	err := stmt.QueryContext(ctx, yts.DB, &video)
+	if err != nil {
+		return nil, err
+	}
+
+	return yts.Mapper.MapYoutubeVideo(&video), nil
+}
+
 func (yts *YouTubeStore) LinkTrack(ctx context.Context, videoID string, trackID uuid.UUID) error {
 	stmt := table.Youtube.UPDATE().SET(
 		table.Youtube.TrackID.SET(postgres.UUID(trackID)),

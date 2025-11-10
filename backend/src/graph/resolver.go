@@ -6,6 +6,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/auth"
 	"github.com/CZnavody19/music-manager/src/internal/discord"
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
+	"github.com/CZnavody19/music-manager/src/internal/orchestration"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
@@ -27,6 +28,8 @@ type Resolver struct {
 	Discord     *discord.Discord
 	Plex        *plex.Plex
 	Websockets  *websockets.Websockets
+
+	Orchestrator *orchestration.Orchestrator
 
 	HttpHandler *http.HttpHandler
 

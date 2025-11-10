@@ -42,11 +42,11 @@ export type Mutation = {
   matchVideo: Scalars['Boolean']['output'];
   refreshPlaylist: Scalars['Boolean']['output'];
   refreshPlexLibrary: Scalars['Boolean']['output'];
+  refreshPlexTracks: Scalars['Boolean']['output'];
   sendTestDiscordMessage: Scalars['Boolean']['output'];
   setDiscordConfig: Scalars['Boolean']['output'];
   setPlexConfig: Scalars['Boolean']['output'];
   setYoutubeConfig: Scalars['Boolean']['output'];
-  test: Scalars['Boolean']['output'];
 };
 
 
@@ -112,14 +112,31 @@ export type PlexConfigInput = {
   token: Scalars['String']['input'];
 };
 
+export type PlexTrack = {
+  __typename?: 'PlexTrack';
+  artist: Scalars['String']['output'];
+  duration: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  mbid?: Maybe<Scalars['UUID']['output']>;
+  title: Scalars['String']['output'];
+  trackID?: Maybe<Scalars['UUID']['output']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   getDiscordConfig: DiscordConfig;
   getPlexConfig: PlexConfig;
+  getPlexTracks: Array<PlexTrack>;
   getServiceStatus: ServiceStatus;
   getTracks: Array<Track>;
+  getVideoByID: YouTubeVideo;
   getVideosInPlaylist: Array<YouTubeVideo>;
   getYoutubeConfig: YoutubeConfig;
+};
+
+
+export type QueryGetVideoByIdArgs = {
+  videoID: Scalars['String']['input'];
 };
 
 export type ServiceStatus = {

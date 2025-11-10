@@ -1,0 +1,17 @@
+type PlexTrack {
+    id: ID!
+    title: String!
+    artist: String!
+    duration: Int!
+    mbid: UUID
+    trackID: UUID
+}
+
+extend type Query {
+    getPlexTracks: [PlexTrack!]! @auth @plexEnabled
+}
+
+extend type Mutation {
+    refreshPlexTracks: Boolean! @auth @plexEnabled
+    refreshPlexLibrary: Boolean! @auth @plexEnabled
+}

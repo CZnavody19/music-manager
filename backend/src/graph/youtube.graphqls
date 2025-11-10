@@ -9,10 +9,11 @@ type YouTubeVideo {
 }
 
 extend type Query {
-	getVideosInPlaylist: [YouTubeVideo!]!
+	getVideosInPlaylist: [YouTubeVideo!]! @auth @youtubeEnabled
+	getVideoByID(videoID: String!): YouTubeVideo! @auth @youtubeEnabled
 }
 
 extend type Mutation {
-	refreshPlaylist: Boolean!
-	matchVideo(videoID: String!, trackID: UUID!): Boolean!
+	refreshPlaylist: Boolean! @auth @youtubeEnabled
+	matchVideo(videoID: String!, trackID: UUID!): Boolean! @auth @youtubeEnabled
 }

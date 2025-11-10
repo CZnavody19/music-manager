@@ -14,6 +14,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/go-jet/jet/v2/qrm"
+	"github.com/google/uuid"
 	"github.com/sosodev/duration"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
@@ -127,7 +128,6 @@ func (yt *YouTube) Disable(ctx context.Context) error {
 	return nil
 }
 
-// Gets called by a CRON job
 func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 	if !yt.enabled {
 		return nil
@@ -199,6 +199,13 @@ func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 		return err
 	}
 
+	for _, video := range videoArr {
+		yt.musicBrainz.SearchQueue <- IdentificationRequest{
+			Video:   video,
+			YtStore: yt.ytStore,
+		}
+	}
+
 	yt.websockets.SendTask(&model.Task{
 		Title:     "Refreshed YouTube playlist",
 		StartedAt: start,
@@ -207,7 +214,7 @@ func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 
 	zap.S().Info("YouTube playlist refreshed successfully")
 
-	return nil
+	return err
 }
 
 func (yt *YouTube) GetVideos(ctx context.Context) ([]*domain.YouTubeVideo, error) {
@@ -218,24 +225,18 @@ func (yt *YouTube) GetVideos(ctx context.Context) ([]*domain.YouTubeVideo, error
 	return yt.ytStore.GetVideos(ctx, false)
 }
 
-func (yt *YouTube) Identify(ctx context.Context) error {
+func (yt *YouTube) GetVideoByID(ctx context.Context, id string) (*domain.YouTubeVideo, error) {
 	if !yt.enabled {
-		return nil
+		return nil, fmt.Errorf("YouTube integration is not enabled")
 	}
 
-	zap.S().Info("Starting YouTube video identification process")
+	return yt.ytStore.GetVideoByID(ctx, id)
+}
 
-	videos, err := yt.ytStore.GetVideos(ctx, true)
-	if err != nil {
-		return err
+func (yt *YouTube) MatchVideo(ctx context.Context, videoID string, trackID uuid.UUID) error {
+	if !yt.enabled {
+		return fmt.Errorf("YouTube integration is not enabled")
 	}
 
-	for _, video := range videos {
-		yt.musicBrainz.SearchQueue <- IdentificationRequest{
-			Video:   video,
-			YtStore: yt.ytStore,
-		}
-	}
-
-	return nil
+	return yt.ytStore.LinkTrack(ctx, videoID, trackID)
 }

@@ -17,5 +17,5 @@ type PlexTrack struct {
 	Artist   string
 	Duration int64
 	Mbid     *uuid.UUID
-	TrackID  *string
+	TrackID  *uuid.UUID
 }

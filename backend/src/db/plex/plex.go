@@ -25,7 +25,9 @@ func NewPlexStore(db *sql.DB, mapper *db.Mapper) *PlexStore {
 }
 
 func (ps *PlexStore) StoreTracks(ctx context.Context, tracks []domain.PlexTrack) error {
-	stmt := table.Plex.INSERT(table.Plex.AllColumns).MODELS(tracks)
+	stmt := table.Plex.INSERT(table.Plex.AllColumns.Except(table.Plex.TrackID)).MODELS(tracks)
+
+	stmt = db.DoUpsert(stmt, table.Plex.ID, table.Plex.MutableColumns.Except(table.Plex.TrackID), table.Plex.EXCLUDED.MutableColumns.Except(table.Plex.TrackID))
 
 	_, err := stmt.ExecContext(ctx, ps.DB)
 	if err != nil {
