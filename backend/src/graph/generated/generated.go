@@ -72,6 +72,7 @@ type ComplexityRoot struct {
 		SetDiscordConfig       func(childComplexity int, config model.DiscordConfigInput) int
 		SetPlexConfig          func(childComplexity int, config model.PlexConfigInput) int
 		SetYoutubeConfig       func(childComplexity int, config model.YoutubeConfigInput) int
+		Test                   func(childComplexity int) int
 	}
 
 	PlexConfig struct {
@@ -144,6 +145,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	Test(ctx context.Context) (bool, error)
 	Login(ctx context.Context, input model.LoginInput) (string, error)
 	Logout(ctx context.Context) (bool, error)
 	ChangeLogin(ctx context.Context, input model.LoginInput) (bool, error)
@@ -328,6 +330,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SetYoutubeConfig(childComplexity, args["config"].(model.YoutubeConfigInput)), true
+	case "Mutation.test":
+		if e.complexity.Mutation.Test == nil {
+			break
+		}
+
+		return e.complexity.Mutation.Test(childComplexity), true
 
 	case "PlexConfig.host":
 		if e.complexity.PlexConfig.Host == nil {
@@ -796,7 +804,9 @@ scalar Time
 
 type Query
 
-type Mutation
+type Mutation {
+    test: Boolean!
+}
 
 type Subscription`, BuiltIn: false},
 	{Name: "../services.graphqls", Input: `type ServiceStatus {
@@ -1066,6 +1076,35 @@ func (ec *executionContext) fieldContext_DiscordConfig_webhookURL(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_test(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_test,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().Test(ctx)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_test(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4976,6 +5015,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "test":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_test(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "login":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_login(ctx, field)

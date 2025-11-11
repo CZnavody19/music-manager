@@ -20,6 +20,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
+	"github.com/CZnavody19/music-manager/src/mq"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -30,6 +31,8 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 	youtubeStore := youtubeStore.NewYouTubeStore(dbConn, dbMapper)
 	musibcrainzStore := musicbrainzStore.NewMusicbrainzStore(dbConn, dbMapper)
 	plexStore := plexStore.NewPlexStore(dbConn, dbMapper)
+
+	mq := mq.NewMessageQueue(mqConn)
 
 	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
 	if err != nil {
@@ -46,12 +49,12 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
-	plx, err := plex.NewPlex(configStore, plexStore, mb, ws)
+	plx, err := plex.NewPlex(configStore, plexStore, mb, ws, mq)
 	if err != nil {
 		return nil, err
 	}
 
-	yt, err := youtube.NewYouTube(configStore, youtubeStore, mb, ws)
+	yt, err := youtube.NewYouTube(configStore, youtubeStore, mb, ws, mq)
 	if err != nil {
 		return nil, err
 	}

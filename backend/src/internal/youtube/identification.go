@@ -8,6 +8,7 @@ import (
 
 	"github.com/CZnavody19/music-manager/src/db/youtube"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/CZnavody19/music-manager/src/mq"
 	"github.com/CZnavody19/music-manager/src/utils"
 	"github.com/google/uuid"
 	"go.uploadedlobster.com/musicbrainzws2"
@@ -24,6 +25,7 @@ const (
 type IdentificationRequest struct {
 	Video   *domain.YouTubeVideo
 	YtStore *youtube.YouTubeStore
+	Mq      *mq.MessageQueue
 }
 
 func (r IdentificationRequest) GetSearchQuery() string {
@@ -55,6 +57,10 @@ func (r IdentificationRequest) GetSimilarityScore(recording *musicbrainzws2.Reco
 
 func (r IdentificationRequest) LinkTrack(ctx context.Context, id uuid.UUID) error {
 	return r.YtStore.LinkTrack(ctx, r.Video.VideoID, id)
+}
+
+func (r IdentificationRequest) Done(ctx context.Context, track *domain.Track) error {
+	return r.Mq.Download(ctx, track)
 }
 
 type parsed struct {

@@ -21,12 +21,12 @@ func NewOrchestrator(pl *plex.Plex, yt *youtube.YouTube) (*Orchestrator, error) 
 
 // Gets called by a CRON job
 func (o *Orchestrator) CRONjob(ctx context.Context) error {
-	err := o.youtube.RefreshPlaylist(ctx)
+	err := o.plex.RefreshTracks(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = o.plex.RefreshTracks(ctx)
+	err = o.youtube.RefreshPlaylist(ctx)
 	if err != nil {
 		return err
 	}

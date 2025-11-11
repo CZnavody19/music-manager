@@ -117,6 +117,12 @@ func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 		})
 
 		zap.S().Infof("Stored MusicBrainz track: %s (similarity: %.2f)", most.ID, mostSim)
+
+		err = request.Done(ctx, &track)
+		if err != nil {
+			zap.S().Errorf("Error marking MusicBrainz track %s as done: %v", most.ID, err)
+			continue
+		}
 	}
 }
 
@@ -174,5 +180,11 @@ func (mb *MusicBrainz) matchWorker(ctx context.Context) {
 		})
 
 		zap.S().Infof("Stored MusicBrainz track: %s", res.Recordings[0].ID)
+
+		err = request.Done(ctx, &track)
+		if err != nil {
+			zap.S().Errorf("Error marking MusicBrainz track %s as done: %v", res.Recordings[0].ID, err)
+			continue
+		}
 	}
 }

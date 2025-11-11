@@ -13,6 +13,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/graph/model"
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
+	"github.com/CZnavody19/music-manager/src/mq"
 	"github.com/go-jet/jet/v2/qrm"
 	"go.uber.org/zap"
 )
@@ -25,6 +26,7 @@ type Plex struct {
 	websockets  *websockets.Websockets
 	plexStore   *plex.PlexStore
 	musicBrainz *musicbrainz.MusicBrainz
+	mq          *mq.MessageQueue
 }
 
 func getPlexAPI(cfg *domain.PlexConfig) *plexapi.Client {
@@ -42,7 +44,7 @@ func getPlexAPI(cfg *domain.PlexConfig) *plexapi.Client {
 	return client
 }
 
-func NewPlex(cs *config.ConfigStore, ps *plex.PlexStore, mb *musicbrainz.MusicBrainz, ws *websockets.Websockets) (*Plex, error) {
+func NewPlex(cs *config.ConfigStore, ps *plex.PlexStore, mb *musicbrainz.MusicBrainz, ws *websockets.Websockets, mq *mq.MessageQueue) (*Plex, error) {
 	ctx := context.Background()
 
 	config, err := cs.GetPlexConfig(ctx)
@@ -63,6 +65,7 @@ func NewPlex(cs *config.ConfigStore, ps *plex.PlexStore, mb *musicbrainz.MusicBr
 		websockets:  ws,
 		plexStore:   ps,
 		musicBrainz: mb,
+		mq:          mq,
 	}, nil
 }
 
@@ -187,6 +190,7 @@ func (p *Plex) RefreshTracks(ctx context.Context) error {
 		p.musicBrainz.MatchQueue <- MatchRequest{
 			track:     &track,
 			plexStore: p.plexStore,
+			Mq:        p.mq,
 		}
 	}
 
