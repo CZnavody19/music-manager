@@ -105,7 +105,7 @@ class TidalDownloader:
                 file_path = future.result()
                 paths.append(file_path)
 
-        temp_file = Path(self.config.download_path) / f"{track.artist.name if track.artist else 'Unknown Artist'} - {track.name}"
+        temp_file = Path(self.config.temp_path) / f"{track.artist.name if track.artist else 'Unknown Artist'} - {track.name}"
 
         self._combine_files(paths, temp_file)
 
@@ -116,8 +116,22 @@ class TidalDownloader:
         temp_file.unlink(missing_ok=True)
 
         self._handle_metadata(track, stream, flac_file)
+
+        final_file = self._move_file(flac_file, track)
+
+        return final_file
+
+    def _move_file(self, file_path: Path, track: Track) -> Path:
+        assert track.artist is not None
+        assert track.artist.name is not None
+        assert track.album is not None
+        assert track.album.name is not None
+
+        new_path = Path(self.config.download_path) / track.artist.name / track.album.name / f"{track.track_num:02d} - {track.name}{AudioExtensions.FLAC}"
         
-        return flac_file
+        new_path.parent.mkdir(parents=True, exist_ok=True)
+
+        return file_path.rename(new_path)
 
     def _handle_metadata(self, track: Track, stream: Stream, path_media: Path) -> None:
         """

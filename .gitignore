@@ -4,5 +4,6 @@ backend/tmp/
 
 tidal/**/__pycache__/
 tidal/downloads/
+tidal/download/
 tidal/temp/
 tidal/venv/
