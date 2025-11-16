@@ -30,6 +30,16 @@ func (r *mutationResolver) RefreshPlexLibrary(ctx context.Context) (bool, error)
 	return true, nil
 }
 
+// DeletePlexTrack is the resolver for the deletePlexTrack field.
+func (r *mutationResolver) DeletePlexTrack(ctx context.Context, id int64) (bool, error) {
+	err := r.Plex.DeleteTrack(ctx, id)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // GetPlexTracks is the resolver for the getPlexTracks field.
 func (r *queryResolver) GetPlexTracks(ctx context.Context) ([]*model.PlexTrack, error) {
 	tracks, err := r.Plex.GetTracks(ctx)

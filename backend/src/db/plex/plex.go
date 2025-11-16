@@ -63,3 +63,10 @@ func (ps *PlexStore) LinkTrack(ctx context.Context, plexID int64, trackID uuid.U
 	_, err := stmt.ExecContext(ctx, ps.DB)
 	return err
 }
+
+func (ps *PlexStore) DeleteTrack(ctx context.Context, plexID int64) error {
+	stmt := table.Plex.DELETE().WHERE(table.Plex.ID.EQ(postgres.Int64(plexID)))
+
+	_, err := stmt.ExecContext(ctx, ps.DB)
+	return err
+}

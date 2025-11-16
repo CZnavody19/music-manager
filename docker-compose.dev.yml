@@ -89,7 +89,8 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - API_URL=http://backend:8080/
+      - INTERNAL_API_URL=backend:8080/
+      - PUBLIC_API_URL=localhost:8080/
       - SESSION_SECRET=meowmeowmeow
     depends_on:
       backend:

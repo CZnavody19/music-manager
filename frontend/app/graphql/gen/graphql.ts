@@ -45,6 +45,7 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   changeLogin: Scalars['Boolean']['output'];
+  deletePlexTrack: Scalars['Boolean']['output'];
   enableDiscord: Scalars['Boolean']['output'];
   enablePlex: Scalars['Boolean']['output'];
   enableTidal: Scalars['Boolean']['output'];
@@ -67,6 +68,11 @@ export type Mutation = {
 
 export type MutationChangeLoginArgs = {
   input: LoginInput;
+};
+
+
+export type MutationDeletePlexTrackArgs = {
+  id: Scalars['ID']['input'];
 };
 
 

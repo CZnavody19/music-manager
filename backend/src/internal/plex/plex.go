@@ -218,3 +218,16 @@ func (p *Plex) RefreshLibrary(ctx context.Context) error {
 
 	return nil
 }
+
+func (p *Plex) DeleteTrack(ctx context.Context, id int64) error {
+	if !p.enabled {
+		return nil
+	}
+
+	err := p.plexStore.DeleteTrack(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

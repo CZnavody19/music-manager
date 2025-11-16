@@ -23,15 +23,34 @@ export async function action({ request }: Route.ActionArgs) {
 
     const { client } = await getGQLClient(request);
 
-    const { error } = await client.mutate({
-        mutation: gql`
-            mutation refreshPlexTracks {
-                refreshPlexTracks
-            }
-        `,
-    });
+    switch (body.action) {
+        case "refresh":
+            const { error: refreshErr } = await client.mutate({
+                mutation: gql`
+                    mutation refreshPlexTracks {
+                        refreshPlexTracks
+                    }
+                `,
+            });
 
-    return { errors: error };
+            return { errors: refreshErr };
+
+        case "delete":
+            if (!body.id) {
+                return {}
+            }
+
+            const { error: deleteErr } = await client.mutate({
+                mutation: gql`
+                    mutation deletePlexTrack($id: ID!) {
+                        deletePlexTrack(id: $id)
+                    }
+                `,
+                variables: { id: body.id },
+            });
+
+            return { errors: deleteErr };
+    }
 }
 
 export async function loader({ request }: Route.LoaderArgs) {

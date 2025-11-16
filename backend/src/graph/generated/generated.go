@@ -64,6 +64,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		ChangeLogin            func(childComplexity int, input model.LoginInput) int
+		DeletePlexTrack        func(childComplexity int, id int64) int
 		EnableDiscord          func(childComplexity int, enable bool) int
 		EnablePlex             func(childComplexity int, enable bool) int
 		EnableTidal            func(childComplexity int, enable bool) int
@@ -180,6 +181,7 @@ type MutationResolver interface {
 	SetTidalConfig(ctx context.Context, config model.TidalConfigInput) (bool, error)
 	RefreshPlexTracks(ctx context.Context) (bool, error)
 	RefreshPlexLibrary(ctx context.Context) (bool, error)
+	DeletePlexTrack(ctx context.Context, id int64) (bool, error)
 	EnableYoutube(ctx context.Context, enable bool) (bool, error)
 	EnableDiscord(ctx context.Context, enable bool) (bool, error)
 	EnablePlex(ctx context.Context, enable bool) (bool, error)
@@ -254,6 +256,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.ChangeLogin(childComplexity, args["input"].(model.LoginInput)), true
+	case "Mutation.deletePlexTrack":
+		if e.complexity.Mutation.DeletePlexTrack == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deletePlexTrack_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeletePlexTrack(childComplexity, args["id"].(int64)), true
 	case "Mutation.enableDiscord":
 		if e.complexity.Mutation.EnableDiscord == nil {
 			break
@@ -993,6 +1006,7 @@ extend type Query {
 extend type Mutation {
     refreshPlexTracks: Boolean! @auth @plexEnabled
     refreshPlexLibrary: Boolean! @auth @plexEnabled
+    deletePlexTrack(id: ID!): Boolean! @auth @plexEnabled
 }`, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `scalar UUID
 
@@ -1080,6 +1094,17 @@ func (ec *executionContext) field_Mutation_changeLogin_args(ctx context.Context,
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deletePlexTrack_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2int64)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1900,6 +1925,67 @@ func (ec *executionContext) fieldContext_Mutation_refreshPlexLibrary(_ context.C
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deletePlexTrack(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deletePlexTrack,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeletePlexTrack(ctx, fc.Args["id"].(int64))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.directives.PlexEnabled == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive plexEnabled is not implemented")
+				}
+				return ec.directives.PlexEnabled(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deletePlexTrack(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deletePlexTrack_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -6140,6 +6226,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "refreshPlexLibrary":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_refreshPlexLibrary(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletePlexTrack":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deletePlexTrack(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
