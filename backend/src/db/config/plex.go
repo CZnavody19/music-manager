@@ -30,7 +30,7 @@ func (cs *ConfigStore) SavePlexConfig(ctx context.Context, config *domain.PlexCo
 		PlexConfig: *config,
 	})
 
-	stmt = db.DoUpsert(stmt, table.Plex.Active, table.Plex.MutableColumns, table.Plex.EXCLUDED.MutableColumns)
+	stmt = db.DoUpsert(stmt, table.Plex.Active, table.Plex.MutableColumns.Except(table.Plex.Enabled), table.Plex.EXCLUDED.MutableColumns.Except(table.Plex.Enabled))
 
 	_, err := stmt.ExecContext(ctx, cs.DB)
 

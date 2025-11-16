@@ -32,14 +32,12 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 	musibcrainzStore := musicbrainzStore.NewMusicbrainzStore(dbConn, dbMapper)
 	plexStore := plexStore.NewPlexStore(dbConn, dbMapper)
 
-	mq := mq.NewMessageQueue(mqConn)
-
-	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
+	ws, err := websockets.NewWebsockets()
 	if err != nil {
 		return nil, err
 	}
 
-	ws, err := websockets.NewWebsockets()
+	dsc, err := discord.NewDiscord(configStore)
 	if err != nil {
 		return nil, err
 	}
@@ -49,17 +47,22 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
-	plx, err := plex.NewPlex(configStore, plexStore, mb, ws, mq)
+	plx, err := plex.NewPlex(configStore, plexStore, mb, ws)
+	if err != nil {
+		return nil, err
+	}
+
+	mq, err := mq.NewMessageQueue(mqConn, dsc, plx)
+	if err != nil {
+		return nil, err
+	}
+
+	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
 	if err != nil {
 		return nil, err
 	}
 
 	yt, err := youtube.NewYouTube(configStore, youtubeStore, mb, ws, mq)
-	if err != nil {
-		return nil, err
-	}
-
-	dsc, err := discord.NewDiscord(configStore)
 	if err != nil {
 		return nil, err
 	}

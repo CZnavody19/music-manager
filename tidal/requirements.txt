@@ -1,0 +1,6 @@
+pika
+tidalapi
+dataclasses
+python-ffmpeg
+mutagen
+thefuzz

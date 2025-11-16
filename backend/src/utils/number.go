@@ -10,3 +10,7 @@ func NumberSimilarity(a, b float64) float64 {
 	q := math.Abs((a - b) / den)
 	return 1.0 - math.Min(q, 1.0)
 }
+
+func IntPtr(n int) *int {
+	return &n
+}

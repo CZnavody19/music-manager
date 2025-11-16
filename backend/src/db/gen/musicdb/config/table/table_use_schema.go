@@ -14,5 +14,6 @@ func UseSchema(schema string) {
 	Discord = Discord.FromSchema(schema)
 	General = General.FromSchema(schema)
 	Plex = Plex.FromSchema(schema)
+	Tidal = Tidal.FromSchema(schema)
 	Youtube = Youtube.FromSchema(schema)
 }

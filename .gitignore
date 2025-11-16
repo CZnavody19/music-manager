@@ -1,3 +1,8 @@
 *.env*
 
 backend/tmp/
+
+tidal/**/__pycache__/
+tidal/downloads/
+tidal/temp/
+tidal/venv/

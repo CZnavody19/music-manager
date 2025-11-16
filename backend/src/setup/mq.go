@@ -21,5 +21,10 @@ func SetupMq(config *config.MQConfig) (*amqp.Connection, error) {
 		return nil, err
 	}
 
+	err = chann.ExchangeDeclare("downloads_complete", "direct", true, false, false, false, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	return conn, nil
 }

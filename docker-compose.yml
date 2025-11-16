@@ -41,15 +41,8 @@ services:
     command: bash -c "pip install watchdog && watchmedo auto-restart --directory=./ --pattern='*.py' --recursive python main.py"
     environment:
       RABBITMQ_URL: amqp://guest:guest@mq:5672/
+      CONFIG_SERVICE_URL: http://backend:8080
       PYTHONUNBUFFERED: 1
-      TIDAL_TOKEN_TYPE: "Bearer"
-      TIDAL_ACCESS_TOKEN: "eyJraWQiOiJ2OU1GbFhqWSIsImFsZyI6IkVTMjU2In0.eyJ0eXBlIjoibzJfYWNjZXNzIiwidWlkIjoyMDU4Mjk1MTAsInNjb3BlIjoicl91c3Igd191c3Igd19zdWIiLCJnVmVyIjowLCJzVmVyIjowLCJjaWQiOjEzMzE5LCJleHAiOjE3NjEyODkyNTcsInNpZCI6ImQ1YmMyOTcyLTA3YzQtNGYwYi1hNGNiLTMyMjY4OTU4N2ZkNiIsImlzcyI6Imh0dHBzOi8vYXV0aC50aWRhbC5jb20vdjEifQ.FX38H_KT2ziHN-Z3LgYCALlaLjK4oh3ucsQZSyVOosAfG6qK0OYBhQP4A8Aatt60rQ8zPaQiul6BHepf7SKi-A"
-      TIDAL_REFRESH_TOKEN: "eyJraWQiOiJoUzFKYTdVMCIsImFsZyI6IkVTNTEyIn0.eyJ0eXBlIjoibzJfcmVmcmVzaCIsInVpZCI6MjA1ODI5NTEwLCJzY29wZSI6InJfdXNyIHdfdXNyIHdfc3ViIiwiY2lkIjoxMzMxOSwic1ZlciI6MCwiZ1ZlciI6MCwiaXNzIjoiaHR0cHM6Ly9hdXRoLnRpZGFsLmNvbS92MSJ9.AOYhiiU8NL2AJxCzH7fPTJv5vSwH2l65BX-niPpYMGW_Ra9oshuuYqd7EXP-1QqPg4rkaNIp9LsS7r0z90IsdpnkAD1b2KPPO54gAutI72O2SY2YheqEvFfTuA6weZ0c8bYhpLkbkffb_uDM4VuUpbIhHuBI5IVXliQYrewpUhr1q1yw"
-      TIDAL_EXPIRY_TIME: "1761278457.441437"
-      TIDAL_CLIENT_ID: "7m7Ap0JC9j1cOM3n"
-      TIDAL_CLIENT_SECRET: "vRAdA108tlvkJpTsGZS8rGZ7xTlbJ0qaZ2K9saEzsgY="
-      DOWNLOAD_PATH: "./downloads"
-      TEMP_PATH: "./temp"
     depends_on:
       - mq
     volumes:

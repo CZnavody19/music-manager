@@ -54,6 +54,22 @@ func (m *Mapper) MapAuthConfig(input *cfgModel.Auth) *domain.AuthConfig {
 	}
 }
 
+func (m *Mapper) MapTidalConfig(input *cfgModel.Tidal) *domain.TidalConfig {
+	return &domain.TidalConfig{
+		Enabled:          input.Enabled,
+		AuthTokenType:    input.AuthTokenType,
+		AuthAccessToken:  input.AuthAccessToken,
+		AuthRefreshToken: input.AuthRefreshToken,
+		AuthExpiresAt:    input.AuthExpiresAt,
+		AuthClientID:     input.AuthClientID,
+		AuthClientSecret: input.AuthClientSecret,
+		DownloadTimeout:  int64(input.DownloadTimeout),
+		DownloadRetries:  int64(input.DownloadRetries),
+		DownloadThreads:  int64(input.DownloadThreads),
+		AudioQuality:     input.AudioQuality,
+	}
+}
+
 func (m *Mapper) MapYoutubeVideos(input []*model.Youtube) []*domain.YouTubeVideo {
 	var out []*domain.YouTubeVideo
 

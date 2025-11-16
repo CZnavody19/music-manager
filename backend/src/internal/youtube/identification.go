@@ -60,6 +60,10 @@ func (r IdentificationRequest) LinkTrack(ctx context.Context, id uuid.UUID) erro
 }
 
 func (r IdentificationRequest) Done(ctx context.Context, track *domain.Track) error {
+	if track.LinkedPlex {
+		return nil
+	}
+
 	return r.Mq.Download(ctx, track)
 }
 
