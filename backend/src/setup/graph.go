@@ -73,7 +73,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
-	orch, err := orchestration.NewOrchestrator(plx, yt)
+	orch, err := orchestration.NewOrchestrator(mb, plx, yt, tidal)
 	if err != nil {
 		return nil, err
 	}

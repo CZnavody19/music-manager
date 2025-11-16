@@ -20,7 +20,3 @@ func (r MatchRequest) GetTrackID() uuid.UUID {
 func (r MatchRequest) LinkTrack(ctx context.Context, trackID uuid.UUID) error {
 	return r.plexStore.LinkTrack(ctx, r.track.ID, trackID)
 }
-
-func (r MatchRequest) Done(ctx context.Context, track *domain.Track) error {
-	return nil
-}

@@ -4,8 +4,6 @@ scalar Time
 
 type Query
 
-type Mutation {
-    test: Boolean!
-}
+type Mutation
 
 type Subscription

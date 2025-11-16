@@ -63,7 +63,6 @@ export type Mutation = {
   setPlexConfig: Scalars['Boolean']['output'];
   setTidalConfig: Scalars['Boolean']['output'];
   setYoutubeConfig: Scalars['Boolean']['output'];
-  test: Scalars['Boolean']['output'];
 };
 
 

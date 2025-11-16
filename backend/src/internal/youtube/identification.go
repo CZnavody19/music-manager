@@ -59,14 +59,6 @@ func (r IdentificationRequest) LinkTrack(ctx context.Context, id uuid.UUID) erro
 	return r.YtStore.LinkTrack(ctx, r.Video.VideoID, id)
 }
 
-func (r IdentificationRequest) Done(ctx context.Context, track *domain.Track) error {
-	if track.LinkedPlex {
-		return nil
-	}
-
-	return r.Tidal.Download(ctx, track)
-}
-
 type parsed struct {
 	Artist    string
 	Title     string

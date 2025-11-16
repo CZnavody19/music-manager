@@ -11,13 +11,11 @@ type IdentificationRequest interface {
 	GetSearchQuery() string
 	GetSimilarityScore(recording *musicbrainzws2.Recording) float64
 	LinkTrack(ctx context.Context, trackID uuid.UUID) error
-	Done(ctx context.Context, track *Track) error
 }
 
 type MatchRequest interface {
 	GetTrackID() uuid.UUID
 	LinkTrack(ctx context.Context, trackID uuid.UUID) error
-	Done(ctx context.Context, track *Track) error
 }
 
 type Track struct {
