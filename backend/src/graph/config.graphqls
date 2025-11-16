@@ -1,3 +1,13 @@
+type GeneralConfig {
+    downloadPath: String!
+    tempPath: String!
+}
+
+input GeneralConfigInput {
+    downloadPath: String!
+    tempPath: String!
+}
+
 type DiscordConfig {
     webhookURL: String!
 }
@@ -30,14 +40,44 @@ input YoutubeConfigInput {
     playlistID: String!
 }
 
+type TidalConfig {
+    authTokenType: String!
+    authAccessToken: String!
+    authRefreshToken: String!
+    authExpiresAt: Time!
+    authClientID: String!
+    authClientSecret: String!
+    downloadTimeout: Int!
+    downloadRetries: Int!
+    downloadThreads: Int!
+    audioQuality: String!
+}
+
+input TidalConfigInput {
+    authTokenType: String!
+    authAccessToken: String!
+    authRefreshToken: String!
+    authExpiresAt: Time!
+    authClientID: String!
+    authClientSecret: String!
+    downloadTimeout: Int!
+    downloadRetries: Int!
+    downloadThreads: Int!
+    audioQuality: String!
+}
+
 extend type Query {
+    getGeneralConfig: GeneralConfig! @auth
     getDiscordConfig: DiscordConfig! @auth
     getPlexConfig: PlexConfig! @auth
     getYoutubeConfig: YoutubeConfig! @auth
+    getTidalConfig: TidalConfig! @auth
 }
 
 extend type Mutation {
+    setGeneralConfig(config: GeneralConfigInput!): Boolean! @auth
     setDiscordConfig(config: DiscordConfigInput!): Boolean! @auth
     setPlexConfig(config: PlexConfigInput!): Boolean! @auth
     setYoutubeConfig(config: YoutubeConfigInput!): Boolean! @auth
+    setTidalConfig(config: TidalConfigInput!): Boolean! @auth
 }

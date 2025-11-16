@@ -12,6 +12,13 @@ func NewInputMapper() *InputMapper {
 	return &InputMapper{}
 }
 
+func (im *InputMapper) MapGeneralConfigInput(input model.GeneralConfigInput) *domain.GeneralConfig {
+	return &domain.GeneralConfig{
+		DownloadPath: input.DownloadPath,
+		TempPath:     input.TempPath,
+	}
+}
+
 func (im *InputMapper) MapDiscordConfigInput(input model.DiscordConfigInput) *domain.DiscordConfig {
 	return &domain.DiscordConfig{
 		WebhookURL: input.WebhookURL,
@@ -38,5 +45,20 @@ func (im *InputMapper) MapLoginInput(input model.LoginInput) *domain.Credentials
 func (im *InputMapper) MapYoutubeConfigInput(input model.YoutubeConfigInput) *domain.YouTubeConfig {
 	return &domain.YouTubeConfig{
 		PlaylistID: input.PlaylistID,
+	}
+}
+
+func (im *InputMapper) MapTidalConfigInput(input model.TidalConfigInput) *domain.TidalConfig {
+	return &domain.TidalConfig{
+		AuthTokenType:    input.AuthTokenType,
+		AuthAccessToken:  input.AuthAccessToken,
+		AuthRefreshToken: input.AuthRefreshToken,
+		AuthExpiresAt:    input.AuthExpiresAt,
+		AuthClientID:     input.AuthClientID,
+		AuthClientSecret: input.AuthClientSecret,
+		DownloadTimeout:  input.DownloadTimeout,
+		DownloadRetries:  input.DownloadRetries,
+		DownloadThreads:  input.DownloadThreads,
+		AudioQuality:     input.AudioQuality,
 	}
 }

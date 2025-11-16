@@ -26,6 +26,17 @@ export type DiscordConfigInput = {
   webhookURL: Scalars['String']['input'];
 };
 
+export type GeneralConfig = {
+  __typename?: 'GeneralConfig';
+  downloadPath: Scalars['String']['output'];
+  tempPath: Scalars['String']['output'];
+};
+
+export type GeneralConfigInput = {
+  downloadPath: Scalars['String']['input'];
+  tempPath: Scalars['String']['input'];
+};
+
 export type LoginInput = {
   password: Scalars['String']['input'];
   username: Scalars['String']['input'];
@@ -36,6 +47,7 @@ export type Mutation = {
   changeLogin: Scalars['Boolean']['output'];
   enableDiscord: Scalars['Boolean']['output'];
   enablePlex: Scalars['Boolean']['output'];
+  enableTidal: Scalars['Boolean']['output'];
   enableYoutube: Scalars['Boolean']['output'];
   login: Scalars['String']['output'];
   logout: Scalars['Boolean']['output'];
@@ -45,8 +57,11 @@ export type Mutation = {
   refreshPlexTracks: Scalars['Boolean']['output'];
   sendTestDiscordMessage: Scalars['Boolean']['output'];
   setDiscordConfig: Scalars['Boolean']['output'];
+  setGeneralConfig: Scalars['Boolean']['output'];
   setPlexConfig: Scalars['Boolean']['output'];
+  setTidalConfig: Scalars['Boolean']['output'];
   setYoutubeConfig: Scalars['Boolean']['output'];
+  test: Scalars['Boolean']['output'];
 };
 
 
@@ -61,6 +76,11 @@ export type MutationEnableDiscordArgs = {
 
 
 export type MutationEnablePlexArgs = {
+  enable: Scalars['Boolean']['input'];
+};
+
+
+export type MutationEnableTidalArgs = {
   enable: Scalars['Boolean']['input'];
 };
 
@@ -86,8 +106,18 @@ export type MutationSetDiscordConfigArgs = {
 };
 
 
+export type MutationSetGeneralConfigArgs = {
+  config: GeneralConfigInput;
+};
+
+
 export type MutationSetPlexConfigArgs = {
   config: PlexConfigInput;
+};
+
+
+export type MutationSetTidalConfigArgs = {
+  config: TidalConfigInput;
 };
 
 
@@ -125,9 +155,11 @@ export type PlexTrack = {
 export type Query = {
   __typename?: 'Query';
   getDiscordConfig: DiscordConfig;
+  getGeneralConfig: GeneralConfig;
   getPlexConfig: PlexConfig;
   getPlexTracks: Array<PlexTrack>;
   getServiceStatus: ServiceStatus;
+  getTidalConfig: TidalConfig;
   getTracks: Array<Track>;
   getVideoByID: YouTubeVideo;
   getVideosInPlaylist: Array<YouTubeVideo>;
@@ -143,6 +175,7 @@ export type ServiceStatus = {
   __typename?: 'ServiceStatus';
   discord: Scalars['Boolean']['output'];
   plex: Scalars['Boolean']['output'];
+  tidal: Scalars['Boolean']['output'];
   youtube: Scalars['Boolean']['output'];
 };
 
@@ -156,6 +189,33 @@ export type Task = {
   ended: Scalars['Boolean']['output'];
   startedAt: Scalars['Time']['output'];
   title: Scalars['String']['output'];
+};
+
+export type TidalConfig = {
+  __typename?: 'TidalConfig';
+  audioQuality: Scalars['String']['output'];
+  authAccessToken: Scalars['String']['output'];
+  authClientID: Scalars['String']['output'];
+  authClientSecret: Scalars['String']['output'];
+  authExpiresAt: Scalars['Time']['output'];
+  authRefreshToken: Scalars['String']['output'];
+  authTokenType: Scalars['String']['output'];
+  downloadRetries: Scalars['Int']['output'];
+  downloadThreads: Scalars['Int']['output'];
+  downloadTimeout: Scalars['Int']['output'];
+};
+
+export type TidalConfigInput = {
+  audioQuality: Scalars['String']['input'];
+  authAccessToken: Scalars['String']['input'];
+  authClientID: Scalars['String']['input'];
+  authClientSecret: Scalars['String']['input'];
+  authExpiresAt: Scalars['Time']['input'];
+  authRefreshToken: Scalars['String']['input'];
+  authTokenType: Scalars['String']['input'];
+  downloadRetries: Scalars['Int']['input'];
+  downloadThreads: Scalars['Int']['input'];
+  downloadTimeout: Scalars['Int']['input'];
 };
 
 export type Track = {

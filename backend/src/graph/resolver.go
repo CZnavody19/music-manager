@@ -8,6 +8,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/internal/orchestration"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
+	"github.com/CZnavody19/music-manager/src/internal/tidal"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
 )
@@ -27,6 +28,7 @@ type Resolver struct {
 	YouTube     *youtube.YouTube
 	Discord     *discord.Discord
 	Plex        *plex.Plex
+	Tidal       *tidal.Tidal
 	Websockets  *websockets.Websockets
 
 	Orchestrator *orchestration.Orchestrator

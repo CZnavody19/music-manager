@@ -59,6 +59,22 @@ func (r *mutationResolver) EnablePlex(ctx context.Context, enable bool) (bool, e
 	return true, nil
 }
 
+// EnableTidal is the resolver for the enableTidal field.
+func (r *mutationResolver) EnableTidal(ctx context.Context, enable bool) (bool, error) {
+	var err error
+	if enable {
+		err = r.Tidal.Enable(ctx)
+	} else {
+		err = r.Tidal.Disable(ctx)
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // SendTestDiscordMessage is the resolver for the sendTestDiscordMessage field.
 func (r *mutationResolver) SendTestDiscordMessage(ctx context.Context) (bool, error) {
 	desc := "Description"
@@ -95,5 +111,6 @@ func (r *queryResolver) GetServiceStatus(ctx context.Context) (*model.ServiceSta
 		Youtube: r.YouTube.IsEnabled(),
 		Discord: r.Discord.IsEnabled(),
 		Plex:    r.Plex.IsEnabled(),
+		Tidal:   r.Tidal.IsEnabled(),
 	}, nil
 }

@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+const dateTimeString = z.string().refine((date) => !isNaN(Date.parse(date)));
+
+export const GeneralSettingsSchema = z.object({
+    downloadPath: z.string().min(1, "Download path is required."),
+    tempPath: z.string().min(1, "Temporary path is required."),
+});
+
 export const DiscordSettingsSchema = z.object({
     webhookURL: z.url("Please enter a valid URL for the webhook."),
 });
@@ -19,6 +26,22 @@ export const AuthSchema = z.object({
 
 export const YouTubeSettingsSchema = z.object({
     playlistID: z.string().min(1, "Playlist ID is required."),
+});
+
+export const TidalSettingsSchema = z.object({
+    authTokenType: z.string().min(1, "Auth token type is required."),
+    authAccessToken: z.string().min(1, "Auth access token is required."),
+    authRefreshToken: z.string().min(1, "Auth refresh token is required."),
+    authExpiresAt: dateTimeString,
+    authClientID: z.string().min(1, "Auth client ID is required."),
+    authClientSecret: z.string().min(1, "Auth client secret is required."),
+    downloadTimeout: z.number().min(1, "Download timeout must be at least 1 second."),
+    downloadRetries: z.number().min(1, "Download retries must be at least 1."),
+    downloadThreads: z.number().min(1, "Download threads must be at least 1."),
+    audioQuality: z.string().min(1, "Audio quality is required.").refine((val) =>
+        ["LOW", "HIGH", "LOSSLESS", "HI_RES_LOSSLESS"].includes(val),
+        "Audio quality must be one of: LOW, HIGH, LOSSLESS, HI_RES_LOSSLESS."
+    ),
 });
 
 export const YouTubeMatchSchema = z.object({

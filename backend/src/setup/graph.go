@@ -18,6 +18,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/internal/orchestration"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
+	"github.com/CZnavody19/music-manager/src/internal/tidal"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
 	"github.com/CZnavody19/music-manager/src/mq"
@@ -57,12 +58,17 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
+	tidal, err := tidal.NewTidal(configStore, ws, mq)
+	if err != nil {
+		return nil, err
+	}
+
 	auth, err := auth.NewAuth(configStore, config.Server.TokenCheckEnable)
 	if err != nil {
 		return nil, err
 	}
 
-	yt, err := youtube.NewYouTube(configStore, youtubeStore, mb, ws, mq)
+	yt, err := youtube.NewYouTube(configStore, youtubeStore, mb, tidal, ws, mq)
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +91,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		YouTube:      yt,
 		Discord:      dsc,
 		Plex:         plx,
+		Tidal:        tidal,
 		Orchestrator: orch,
 		Websockets:   ws,
 		HttpHandler:  httpHandler,

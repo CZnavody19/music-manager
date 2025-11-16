@@ -16,6 +16,16 @@ type DiscordConfigInput struct {
 	WebhookURL string `json:"webhookURL"`
 }
 
+type GeneralConfig struct {
+	DownloadPath string `json:"downloadPath"`
+	TempPath     string `json:"tempPath"`
+}
+
+type GeneralConfigInput struct {
+	DownloadPath string `json:"downloadPath"`
+	TempPath     string `json:"tempPath"`
+}
+
 type LoginInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -56,6 +66,7 @@ type ServiceStatus struct {
 	Youtube bool `json:"youtube"`
 	Discord bool `json:"discord"`
 	Plex    bool `json:"plex"`
+	Tidal   bool `json:"tidal"`
 }
 
 type Subscription struct {
@@ -65,6 +76,32 @@ type Task struct {
 	Title     string    `json:"title"`
 	StartedAt time.Time `json:"startedAt"`
 	Ended     bool      `json:"ended"`
+}
+
+type TidalConfig struct {
+	AuthTokenType    string    `json:"authTokenType"`
+	AuthAccessToken  string    `json:"authAccessToken"`
+	AuthRefreshToken string    `json:"authRefreshToken"`
+	AuthExpiresAt    time.Time `json:"authExpiresAt"`
+	AuthClientID     string    `json:"authClientID"`
+	AuthClientSecret string    `json:"authClientSecret"`
+	DownloadTimeout  int64     `json:"downloadTimeout"`
+	DownloadRetries  int64     `json:"downloadRetries"`
+	DownloadThreads  int64     `json:"downloadThreads"`
+	AudioQuality     string    `json:"audioQuality"`
+}
+
+type TidalConfigInput struct {
+	AuthTokenType    string    `json:"authTokenType"`
+	AuthAccessToken  string    `json:"authAccessToken"`
+	AuthRefreshToken string    `json:"authRefreshToken"`
+	AuthExpiresAt    time.Time `json:"authExpiresAt"`
+	AuthClientID     string    `json:"authClientID"`
+	AuthClientSecret string    `json:"authClientSecret"`
+	DownloadTimeout  int64     `json:"downloadTimeout"`
+	DownloadRetries  int64     `json:"downloadRetries"`
+	DownloadThreads  int64     `json:"downloadThreads"`
+	AudioQuality     string    `json:"audioQuality"`
 }
 
 type Track struct {

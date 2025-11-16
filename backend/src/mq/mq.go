@@ -41,7 +41,6 @@ func NewMessageQueue(conn *amqp.Connection, discord *discord.Discord, plex *plex
 	err = chann.QueueBind("downloads_complete.success", "success", "downloads_complete", false, nil)
 	if err != nil {
 		return nil, err
-
 	}
 
 	err = chann.QueueBind("downloads_complete.fail", "fail", "downloads_complete", false, nil)
@@ -73,7 +72,22 @@ func NewMessageQueue(conn *amqp.Connection, discord *discord.Discord, plex *plex
 	return mq, nil
 }
 
-func (mq *MessageQueue) Download(ctx context.Context, track *domain.Track) error {
+func (mq *MessageQueue) Reload(ctx context.Context, service string) error {
+	ch, err := mq.conn.Channel()
+	if err != nil {
+		return err
+	}
+
+	err = ch.PublishWithContext(ctx, "reload", service, false, false, amqp.Publishing{})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (mq *MessageQueue) Download(ctx context.Context, track *domain.Track, service string) error {
 	ch, err := mq.conn.Channel()
 	if err != nil {
 		return err
@@ -84,7 +98,7 @@ func (mq *MessageQueue) Download(ctx context.Context, track *domain.Track) error
 		return err
 	}
 
-	err = ch.PublishWithContext(ctx, "downloads", "tidal", false, false, amqp.Publishing{
+	err = ch.PublishWithContext(ctx, "downloads", service, false, false, amqp.Publishing{
 		ContentType: "application/json",
 		Body:        body,
 	})

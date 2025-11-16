@@ -2,6 +2,7 @@ type ServiceStatus {
     youtube: Boolean!
     discord: Boolean!
     plex: Boolean!
+    tidal: Boolean!
 }
 
 extend type Query {
@@ -12,6 +13,7 @@ extend type Mutation {
     enableYoutube(enable: Boolean!): Boolean! @auth
     enableDiscord(enable: Boolean!): Boolean! @auth
     enablePlex(enable: Boolean!): Boolean! @auth
+    enableTidal(enable: Boolean!): Boolean! @auth
 
     sendTestDiscordMessage: Boolean! @auth @discordEnabled
 }

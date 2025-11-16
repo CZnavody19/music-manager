@@ -12,6 +12,7 @@ export default [
         route("youtube", "routes/settings/youtube.tsx"),
         route("discord", "routes/settings/discord.tsx"),
         route("plex", "routes/settings/plex.tsx"),
+        route("tidal", "routes/settings/tidal.tsx"),
     ]),
 
     route("login", "routes/auth/login.tsx"),

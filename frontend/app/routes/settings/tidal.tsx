@@ -1,6 +1,6 @@
 import { getValidatedFormData, useRemixForm } from "remix-hook-form";
-import type { Route } from "./+types/general";
-import { GeneralConfigForm, resolver, type formType } from "~/components/forms/general";
+import type { Route } from "./+types/tidal";
+import { TidalConfigForm, resolver, type formType } from "~/components/forms/tidal";
 import { useFormResponse } from "~/hooks/use-form-response";
 import { getGQLClient } from "~/.server/apollo";
 import type { Query } from "~/graphql/gen/graphql";
@@ -8,7 +8,7 @@ import { gql } from "@apollo/client";
 
 export function meta() {
     return [
-        { title: "Settings - Music Manager" },
+        { title: "Tidal - Settings - Music Manager" },
         { name: "description", content: "Manage your music collection with ease." },
     ];
 }
@@ -24,8 +24,8 @@ export async function action({ request }: Route.ActionArgs) {
 
     const { error } = await client.mutate({
         mutation: gql`
-            mutation setGeneralConfig($config: GeneralConfigInput!) {
-                setGeneralConfig(config: $config)
+            mutation setTidalConfig($config: TidalConfigInput!) {
+                setTidalConfig(config: $config)
             }
         `,
         variables: {
@@ -41,16 +41,24 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     const { data, error } = await client.query<Query>({
         query: gql`
-            query getGeneralConfig {
-                getGeneralConfig {
-                    downloadPath
-                    tempPath
+            query getTidalConfig {
+                getTidalConfig {
+                    authTokenType
+                    authAccessToken
+                    authRefreshToken
+                    authExpiresAt
+                    authClientID
+                    authClientSecret
+                    downloadTimeout
+                    downloadRetries
+                    downloadThreads
+                    audioQuality
                 }
             }
         `,
     });
 
-    return { errors: error, data: data?.getGeneralConfig };
+    return { errors: error, data: data?.getTidalConfig };
 }
 
 export default function Page({ loaderData, actionData }: Route.ComponentProps) {
@@ -61,6 +69,6 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
     useFormResponse<typeof resolver>(actionData);
 
     return (
-        <GeneralConfigForm form={form} />
+        <TidalConfigForm form={form} />
     )
 }

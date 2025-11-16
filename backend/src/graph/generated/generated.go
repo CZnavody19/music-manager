@@ -57,10 +57,16 @@ type ComplexityRoot struct {
 		WebhookURL func(childComplexity int) int
 	}
 
+	GeneralConfig struct {
+		DownloadPath func(childComplexity int) int
+		TempPath     func(childComplexity int) int
+	}
+
 	Mutation struct {
 		ChangeLogin            func(childComplexity int, input model.LoginInput) int
 		EnableDiscord          func(childComplexity int, enable bool) int
 		EnablePlex             func(childComplexity int, enable bool) int
+		EnableTidal            func(childComplexity int, enable bool) int
 		EnableYoutube          func(childComplexity int, enable bool) int
 		Login                  func(childComplexity int, input model.LoginInput) int
 		Logout                 func(childComplexity int) int
@@ -70,7 +76,9 @@ type ComplexityRoot struct {
 		RefreshPlexTracks      func(childComplexity int) int
 		SendTestDiscordMessage func(childComplexity int) int
 		SetDiscordConfig       func(childComplexity int, config model.DiscordConfigInput) int
+		SetGeneralConfig       func(childComplexity int, config model.GeneralConfigInput) int
 		SetPlexConfig          func(childComplexity int, config model.PlexConfigInput) int
+		SetTidalConfig         func(childComplexity int, config model.TidalConfigInput) int
 		SetYoutubeConfig       func(childComplexity int, config model.YoutubeConfigInput) int
 		Test                   func(childComplexity int) int
 	}
@@ -94,9 +102,11 @@ type ComplexityRoot struct {
 
 	Query struct {
 		GetDiscordConfig    func(childComplexity int) int
+		GetGeneralConfig    func(childComplexity int) int
 		GetPlexConfig       func(childComplexity int) int
 		GetPlexTracks       func(childComplexity int) int
 		GetServiceStatus    func(childComplexity int) int
+		GetTidalConfig      func(childComplexity int) int
 		GetTracks           func(childComplexity int) int
 		GetVideoByID        func(childComplexity int, videoID string) int
 		GetVideosInPlaylist func(childComplexity int) int
@@ -106,6 +116,7 @@ type ComplexityRoot struct {
 	ServiceStatus struct {
 		Discord func(childComplexity int) int
 		Plex    func(childComplexity int) int
+		Tidal   func(childComplexity int) int
 		Youtube func(childComplexity int) int
 	}
 
@@ -117,6 +128,19 @@ type ComplexityRoot struct {
 		Ended     func(childComplexity int) int
 		StartedAt func(childComplexity int) int
 		Title     func(childComplexity int) int
+	}
+
+	TidalConfig struct {
+		AudioQuality     func(childComplexity int) int
+		AuthAccessToken  func(childComplexity int) int
+		AuthClientID     func(childComplexity int) int
+		AuthClientSecret func(childComplexity int) int
+		AuthExpiresAt    func(childComplexity int) int
+		AuthRefreshToken func(childComplexity int) int
+		AuthTokenType    func(childComplexity int) int
+		DownloadRetries  func(childComplexity int) int
+		DownloadThreads  func(childComplexity int) int
+		DownloadTimeout  func(childComplexity int) int
 	}
 
 	Track struct {
@@ -149,22 +173,27 @@ type MutationResolver interface {
 	Login(ctx context.Context, input model.LoginInput) (string, error)
 	Logout(ctx context.Context) (bool, error)
 	ChangeLogin(ctx context.Context, input model.LoginInput) (bool, error)
+	SetGeneralConfig(ctx context.Context, config model.GeneralConfigInput) (bool, error)
 	SetDiscordConfig(ctx context.Context, config model.DiscordConfigInput) (bool, error)
 	SetPlexConfig(ctx context.Context, config model.PlexConfigInput) (bool, error)
 	SetYoutubeConfig(ctx context.Context, config model.YoutubeConfigInput) (bool, error)
+	SetTidalConfig(ctx context.Context, config model.TidalConfigInput) (bool, error)
 	RefreshPlexTracks(ctx context.Context) (bool, error)
 	RefreshPlexLibrary(ctx context.Context) (bool, error)
 	EnableYoutube(ctx context.Context, enable bool) (bool, error)
 	EnableDiscord(ctx context.Context, enable bool) (bool, error)
 	EnablePlex(ctx context.Context, enable bool) (bool, error)
+	EnableTidal(ctx context.Context, enable bool) (bool, error)
 	SendTestDiscordMessage(ctx context.Context) (bool, error)
 	RefreshPlaylist(ctx context.Context) (bool, error)
 	MatchVideo(ctx context.Context, videoID string, trackID uuid.UUID) (bool, error)
 }
 type QueryResolver interface {
+	GetGeneralConfig(ctx context.Context) (*model.GeneralConfig, error)
 	GetDiscordConfig(ctx context.Context) (*model.DiscordConfig, error)
 	GetPlexConfig(ctx context.Context) (*model.PlexConfig, error)
 	GetYoutubeConfig(ctx context.Context) (*model.YoutubeConfig, error)
+	GetTidalConfig(ctx context.Context) (*model.TidalConfig, error)
 	GetPlexTracks(ctx context.Context) ([]*model.PlexTrack, error)
 	GetServiceStatus(ctx context.Context) (*model.ServiceStatus, error)
 	GetTracks(ctx context.Context) ([]*model.Track, error)
@@ -201,6 +230,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DiscordConfig.WebhookURL(childComplexity), true
 
+	case "GeneralConfig.downloadPath":
+		if e.complexity.GeneralConfig.DownloadPath == nil {
+			break
+		}
+
+		return e.complexity.GeneralConfig.DownloadPath(childComplexity), true
+	case "GeneralConfig.tempPath":
+		if e.complexity.GeneralConfig.TempPath == nil {
+			break
+		}
+
+		return e.complexity.GeneralConfig.TempPath(childComplexity), true
+
 	case "Mutation.changeLogin":
 		if e.complexity.Mutation.ChangeLogin == nil {
 			break
@@ -234,6 +276,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.EnablePlex(childComplexity, args["enable"].(bool)), true
+	case "Mutation.enableTidal":
+		if e.complexity.Mutation.EnableTidal == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_enableTidal_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EnableTidal(childComplexity, args["enable"].(bool)), true
 	case "Mutation.enableYoutube":
 		if e.complexity.Mutation.EnableYoutube == nil {
 			break
@@ -308,6 +361,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SetDiscordConfig(childComplexity, args["config"].(model.DiscordConfigInput)), true
+	case "Mutation.setGeneralConfig":
+		if e.complexity.Mutation.SetGeneralConfig == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setGeneralConfig_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetGeneralConfig(childComplexity, args["config"].(model.GeneralConfigInput)), true
 	case "Mutation.setPlexConfig":
 		if e.complexity.Mutation.SetPlexConfig == nil {
 			break
@@ -319,6 +383,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SetPlexConfig(childComplexity, args["config"].(model.PlexConfigInput)), true
+	case "Mutation.setTidalConfig":
+		if e.complexity.Mutation.SetTidalConfig == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setTidalConfig_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetTidalConfig(childComplexity, args["config"].(model.TidalConfigInput)), true
 	case "Mutation.setYoutubeConfig":
 		if e.complexity.Mutation.SetYoutubeConfig == nil {
 			break
@@ -411,6 +486,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetDiscordConfig(childComplexity), true
+	case "Query.getGeneralConfig":
+		if e.complexity.Query.GetGeneralConfig == nil {
+			break
+		}
+
+		return e.complexity.Query.GetGeneralConfig(childComplexity), true
 	case "Query.getPlexConfig":
 		if e.complexity.Query.GetPlexConfig == nil {
 			break
@@ -429,6 +510,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetServiceStatus(childComplexity), true
+	case "Query.getTidalConfig":
+		if e.complexity.Query.GetTidalConfig == nil {
+			break
+		}
+
+		return e.complexity.Query.GetTidalConfig(childComplexity), true
 	case "Query.getTracks":
 		if e.complexity.Query.GetTracks == nil {
 			break
@@ -471,6 +558,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ServiceStatus.Plex(childComplexity), true
+	case "ServiceStatus.tidal":
+		if e.complexity.ServiceStatus.Tidal == nil {
+			break
+		}
+
+		return e.complexity.ServiceStatus.Tidal(childComplexity), true
 	case "ServiceStatus.youtube":
 		if e.complexity.ServiceStatus.Youtube == nil {
 			break
@@ -503,6 +596,67 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Task.Title(childComplexity), true
+
+	case "TidalConfig.audioQuality":
+		if e.complexity.TidalConfig.AudioQuality == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.AudioQuality(childComplexity), true
+	case "TidalConfig.authAccessToken":
+		if e.complexity.TidalConfig.AuthAccessToken == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.AuthAccessToken(childComplexity), true
+	case "TidalConfig.authClientID":
+		if e.complexity.TidalConfig.AuthClientID == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.AuthClientID(childComplexity), true
+	case "TidalConfig.authClientSecret":
+		if e.complexity.TidalConfig.AuthClientSecret == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.AuthClientSecret(childComplexity), true
+	case "TidalConfig.authExpiresAt":
+		if e.complexity.TidalConfig.AuthExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.AuthExpiresAt(childComplexity), true
+	case "TidalConfig.authRefreshToken":
+		if e.complexity.TidalConfig.AuthRefreshToken == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.AuthRefreshToken(childComplexity), true
+	case "TidalConfig.authTokenType":
+		if e.complexity.TidalConfig.AuthTokenType == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.AuthTokenType(childComplexity), true
+	case "TidalConfig.downloadRetries":
+		if e.complexity.TidalConfig.DownloadRetries == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.DownloadRetries(childComplexity), true
+	case "TidalConfig.downloadThreads":
+		if e.complexity.TidalConfig.DownloadThreads == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.DownloadThreads(childComplexity), true
+	case "TidalConfig.downloadTimeout":
+		if e.complexity.TidalConfig.DownloadTimeout == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.DownloadTimeout(childComplexity), true
 
 	case "Track.artist":
 		if e.complexity.Track.Artist == nil {
@@ -606,8 +760,10 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputDiscordConfigInput,
+		ec.unmarshalInputGeneralConfigInput,
 		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputPlexConfigInput,
+		ec.unmarshalInputTidalConfigInput,
 		ec.unmarshalInputYoutubeConfigInput,
 	)
 	first := true
@@ -733,7 +889,17 @@ extend type Mutation {
     logout: Boolean! @auth
     changeLogin(input: LoginInput!): Boolean! @auth
 }`, BuiltIn: false},
-	{Name: "../config.graphqls", Input: `type DiscordConfig {
+	{Name: "../config.graphqls", Input: `type GeneralConfig {
+    downloadPath: String!
+    tempPath: String!
+}
+
+input GeneralConfigInput {
+    downloadPath: String!
+    tempPath: String!
+}
+
+type DiscordConfig {
     webhookURL: String!
 }
 
@@ -765,16 +931,46 @@ input YoutubeConfigInput {
     playlistID: String!
 }
 
+type TidalConfig {
+    authTokenType: String!
+    authAccessToken: String!
+    authRefreshToken: String!
+    authExpiresAt: Time!
+    authClientID: String!
+    authClientSecret: String!
+    downloadTimeout: Int!
+    downloadRetries: Int!
+    downloadThreads: Int!
+    audioQuality: String!
+}
+
+input TidalConfigInput {
+    authTokenType: String!
+    authAccessToken: String!
+    authRefreshToken: String!
+    authExpiresAt: Time!
+    authClientID: String!
+    authClientSecret: String!
+    downloadTimeout: Int!
+    downloadRetries: Int!
+    downloadThreads: Int!
+    audioQuality: String!
+}
+
 extend type Query {
+    getGeneralConfig: GeneralConfig! @auth
     getDiscordConfig: DiscordConfig! @auth
     getPlexConfig: PlexConfig! @auth
     getYoutubeConfig: YoutubeConfig! @auth
+    getTidalConfig: TidalConfig! @auth
 }
 
 extend type Mutation {
+    setGeneralConfig(config: GeneralConfigInput!): Boolean! @auth
     setDiscordConfig(config: DiscordConfigInput!): Boolean! @auth
     setPlexConfig(config: PlexConfigInput!): Boolean! @auth
     setYoutubeConfig(config: YoutubeConfigInput!): Boolean! @auth
+    setTidalConfig(config: TidalConfigInput!): Boolean! @auth
 }`, BuiltIn: false},
 	{Name: "../directives.graphqls", Input: `directive @auth on FIELD_DEFINITION
 
@@ -813,6 +1009,7 @@ type Subscription`, BuiltIn: false},
     youtube: Boolean!
     discord: Boolean!
     plex: Boolean!
+    tidal: Boolean!
 }
 
 extend type Query {
@@ -823,6 +1020,7 @@ extend type Mutation {
     enableYoutube(enable: Boolean!): Boolean! @auth
     enableDiscord(enable: Boolean!): Boolean! @auth
     enablePlex(enable: Boolean!): Boolean! @auth
+    enableTidal(enable: Boolean!): Boolean! @auth
 
     sendTestDiscordMessage: Boolean! @auth @discordEnabled
 }`, BuiltIn: false},
@@ -907,6 +1105,17 @@ func (ec *executionContext) field_Mutation_enablePlex_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_enableTidal_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "enable", ec.unmarshalNBoolean2bool)
+	if err != nil {
+		return nil, err
+	}
+	args["enable"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_enableYoutube_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -956,10 +1165,32 @@ func (ec *executionContext) field_Mutation_setDiscordConfig_args(ctx context.Con
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_setGeneralConfig_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNGeneralConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐGeneralConfigInput)
+	if err != nil {
+		return nil, err
+	}
+	args["config"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_setPlexConfig_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNPlexConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐPlexConfigInput)
+	if err != nil {
+		return nil, err
+	}
+	args["config"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setTidalConfig_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "config", ec.unmarshalNTidalConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTidalConfigInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1071,6 +1302,64 @@ func (ec *executionContext) _DiscordConfig_webhookURL(ctx context.Context, field
 func (ec *executionContext) fieldContext_DiscordConfig_webhookURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DiscordConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GeneralConfig_downloadPath(ctx context.Context, field graphql.CollectedField, obj *model.GeneralConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_GeneralConfig_downloadPath,
+		func(ctx context.Context) (any, error) {
+			return obj.DownloadPath, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_GeneralConfig_downloadPath(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GeneralConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GeneralConfig_tempPath(ctx context.Context, field graphql.CollectedField, obj *model.GeneralConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_GeneralConfig_tempPath,
+		func(ctx context.Context) (any, error) {
+			return obj.TempPath, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_GeneralConfig_tempPath(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GeneralConfig",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1247,6 +1536,60 @@ func (ec *executionContext) fieldContext_Mutation_changeLogin(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_setGeneralConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setGeneralConfig,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetGeneralConfig(ctx, fc.Args["config"].(model.GeneralConfigInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setGeneralConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setGeneralConfig_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_setDiscordConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1403,6 +1746,60 @@ func (ec *executionContext) fieldContext_Mutation_setYoutubeConfig(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_setYoutubeConfig_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setTidalConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setTidalConfig,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetTidalConfig(ctx, fc.Args["config"].(model.TidalConfigInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setTidalConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setTidalConfig_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1663,6 +2060,60 @@ func (ec *executionContext) fieldContext_Mutation_enablePlex(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_enablePlex_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_enableTidal(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_enableTidal,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().EnableTidal(ctx, fc.Args["enable"].(bool))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_enableTidal(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_enableTidal_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2147,6 +2598,54 @@ func (ec *executionContext) fieldContext_PlexTrack_trackID(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getGeneralConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_getGeneralConfig,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().GetGeneralConfig(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal *model.GeneralConfig
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNGeneralConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐGeneralConfig,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_getGeneralConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "downloadPath":
+				return ec.fieldContext_GeneralConfig_downloadPath(ctx, field)
+			case "tempPath":
+				return ec.fieldContext_GeneralConfig_tempPath(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GeneralConfig", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getDiscordConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2293,6 +2792,70 @@ func (ec *executionContext) fieldContext_Query_getYoutubeConfig(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getTidalConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_getTidalConfig,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().GetTidalConfig(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Auth == nil {
+					var zeroVal *model.TidalConfig
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNTidalConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTidalConfig,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_getTidalConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "authTokenType":
+				return ec.fieldContext_TidalConfig_authTokenType(ctx, field)
+			case "authAccessToken":
+				return ec.fieldContext_TidalConfig_authAccessToken(ctx, field)
+			case "authRefreshToken":
+				return ec.fieldContext_TidalConfig_authRefreshToken(ctx, field)
+			case "authExpiresAt":
+				return ec.fieldContext_TidalConfig_authExpiresAt(ctx, field)
+			case "authClientID":
+				return ec.fieldContext_TidalConfig_authClientID(ctx, field)
+			case "authClientSecret":
+				return ec.fieldContext_TidalConfig_authClientSecret(ctx, field)
+			case "downloadTimeout":
+				return ec.fieldContext_TidalConfig_downloadTimeout(ctx, field)
+			case "downloadRetries":
+				return ec.fieldContext_TidalConfig_downloadRetries(ctx, field)
+			case "downloadThreads":
+				return ec.fieldContext_TidalConfig_downloadThreads(ctx, field)
+			case "audioQuality":
+				return ec.fieldContext_TidalConfig_audioQuality(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TidalConfig", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getPlexTracks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2399,6 +2962,8 @@ func (ec *executionContext) fieldContext_Query_getServiceStatus(_ context.Contex
 				return ec.fieldContext_ServiceStatus_discord(ctx, field)
 			case "plex":
 				return ec.fieldContext_ServiceStatus_plex(ctx, field)
+			case "tidal":
+				return ec.fieldContext_ServiceStatus_tidal(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceStatus", field.Name)
 		},
@@ -2801,6 +3366,35 @@ func (ec *executionContext) fieldContext_ServiceStatus_plex(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _ServiceStatus_tidal(ctx context.Context, field graphql.CollectedField, obj *model.ServiceStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ServiceStatus_tidal,
+		func(ctx context.Context) (any, error) {
+			return obj.Tidal, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ServiceStatus_tidal(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Subscription_tasks(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
 	return graphql.ResolveFieldStream(
 		ctx,
@@ -2920,6 +3514,296 @@ func (ec *executionContext) fieldContext_Task_ended(_ context.Context, field gra
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_authTokenType(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_authTokenType,
+		func(ctx context.Context) (any, error) {
+			return obj.AuthTokenType, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_authTokenType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_authAccessToken(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_authAccessToken,
+		func(ctx context.Context) (any, error) {
+			return obj.AuthAccessToken, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_authAccessToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_authRefreshToken(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_authRefreshToken,
+		func(ctx context.Context) (any, error) {
+			return obj.AuthRefreshToken, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_authRefreshToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_authExpiresAt(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_authExpiresAt,
+		func(ctx context.Context) (any, error) {
+			return obj.AuthExpiresAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_authExpiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_authClientID(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_authClientID,
+		func(ctx context.Context) (any, error) {
+			return obj.AuthClientID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_authClientID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_authClientSecret(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_authClientSecret,
+		func(ctx context.Context) (any, error) {
+			return obj.AuthClientSecret, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_authClientSecret(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_downloadTimeout(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_downloadTimeout,
+		func(ctx context.Context) (any, error) {
+			return obj.DownloadTimeout, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_downloadTimeout(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_downloadRetries(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_downloadRetries,
+		func(ctx context.Context) (any, error) {
+			return obj.DownloadRetries, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_downloadRetries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_downloadThreads(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_downloadThreads,
+		func(ctx context.Context) (any, error) {
+			return obj.DownloadThreads, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_downloadThreads(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_audioQuality(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_audioQuality,
+		func(ctx context.Context) (any, error) {
+			return obj.AudioQuality, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_audioQuality(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4833,6 +5717,40 @@ func (ec *executionContext) unmarshalInputDiscordConfigInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputGeneralConfigInput(ctx context.Context, obj any) (model.GeneralConfigInput, error) {
+	var it model.GeneralConfigInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"downloadPath", "tempPath"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "downloadPath":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("downloadPath"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DownloadPath = data
+		case "tempPath":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tempPath"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TempPath = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj any) (model.LoginInput, error) {
 	var it model.LoginInput
 	asMap := map[string]any{}
@@ -4922,6 +5840,96 @@ func (ec *executionContext) unmarshalInputPlexConfigInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTidalConfigInput(ctx context.Context, obj any) (model.TidalConfigInput, error) {
+	var it model.TidalConfigInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"authTokenType", "authAccessToken", "authRefreshToken", "authExpiresAt", "authClientID", "authClientSecret", "downloadTimeout", "downloadRetries", "downloadThreads", "audioQuality"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "authTokenType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authTokenType"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AuthTokenType = data
+		case "authAccessToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authAccessToken"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AuthAccessToken = data
+		case "authRefreshToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authRefreshToken"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AuthRefreshToken = data
+		case "authExpiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authExpiresAt"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AuthExpiresAt = data
+		case "authClientID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authClientID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AuthClientID = data
+		case "authClientSecret":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authClientSecret"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AuthClientSecret = data
+		case "downloadTimeout":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("downloadTimeout"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DownloadTimeout = data
+		case "downloadRetries":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("downloadRetries"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DownloadRetries = data
+		case "downloadThreads":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("downloadThreads"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DownloadThreads = data
+		case "audioQuality":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("audioQuality"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AudioQuality = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputYoutubeConfigInput(ctx context.Context, obj any) (model.YoutubeConfigInput, error) {
 	var it model.YoutubeConfigInput
 	asMap := map[string]any{}
@@ -4996,6 +6004,50 @@ func (ec *executionContext) _DiscordConfig(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var generalConfigImplementors = []string{"GeneralConfig"}
+
+func (ec *executionContext) _GeneralConfig(ctx context.Context, sel ast.SelectionSet, obj *model.GeneralConfig) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, generalConfigImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GeneralConfig")
+		case "downloadPath":
+			out.Values[i] = ec._GeneralConfig_downloadPath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tempPath":
+			out.Values[i] = ec._GeneralConfig_tempPath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -5043,6 +6095,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "setGeneralConfig":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setGeneralConfig(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "setDiscordConfig":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setDiscordConfig(ctx, field)
@@ -5060,6 +6119,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "setYoutubeConfig":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setYoutubeConfig(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setTidalConfig":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setTidalConfig(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -5095,6 +6161,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "enablePlex":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_enablePlex(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "enableTidal":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_enableTidal(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -5279,6 +6352,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "getGeneralConfig":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getGeneralConfig(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getDiscordConfig":
 			field := field
 
@@ -5333,6 +6428,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getYoutubeConfig(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getTidalConfig":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getTidalConfig(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -5512,6 +6629,11 @@ func (ec *executionContext) _ServiceStatus(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "tidal":
+			out.Values[i] = ec._ServiceStatus_tidal(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5578,6 +6700,90 @@ func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "ended":
 			out.Values[i] = ec._Task_ended(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var tidalConfigImplementors = []string{"TidalConfig"}
+
+func (ec *executionContext) _TidalConfig(ctx context.Context, sel ast.SelectionSet, obj *model.TidalConfig) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tidalConfigImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TidalConfig")
+		case "authTokenType":
+			out.Values[i] = ec._TidalConfig_authTokenType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "authAccessToken":
+			out.Values[i] = ec._TidalConfig_authAccessToken(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "authRefreshToken":
+			out.Values[i] = ec._TidalConfig_authRefreshToken(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "authExpiresAt":
+			out.Values[i] = ec._TidalConfig_authExpiresAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "authClientID":
+			out.Values[i] = ec._TidalConfig_authClientID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "authClientSecret":
+			out.Values[i] = ec._TidalConfig_authClientSecret(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "downloadTimeout":
+			out.Values[i] = ec._TidalConfig_downloadTimeout(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "downloadRetries":
+			out.Values[i] = ec._TidalConfig_downloadRetries(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "downloadThreads":
+			out.Values[i] = ec._TidalConfig_downloadThreads(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "audioQuality":
+			out.Values[i] = ec._TidalConfig_audioQuality(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6151,6 +7357,25 @@ func (ec *executionContext) unmarshalNDiscordConfigInput2githubᚗcomᚋCZnavody
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNGeneralConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐGeneralConfig(ctx context.Context, sel ast.SelectionSet, v model.GeneralConfig) graphql.Marshaler {
+	return ec._GeneralConfig(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGeneralConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐGeneralConfig(ctx context.Context, sel ast.SelectionSet, v *model.GeneralConfig) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GeneralConfig(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNGeneralConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐGeneralConfigInput(ctx context.Context, v any) (model.GeneralConfigInput, error) {
+	res, err := ec.unmarshalInputGeneralConfigInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNID2int64(ctx context.Context, v any) (int64, error) {
 	res, err := graphql.UnmarshalInt64(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6333,6 +7558,25 @@ func (ec *executionContext) marshalNTask2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑ
 		return graphql.Null
 	}
 	return ec._Task(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTidalConfig2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTidalConfig(ctx context.Context, sel ast.SelectionSet, v model.TidalConfig) graphql.Marshaler {
+	return ec._TidalConfig(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTidalConfig2ᚖgithubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTidalConfig(ctx context.Context, sel ast.SelectionSet, v *model.TidalConfig) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TidalConfig(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTidalConfigInput2githubᚗcomᚋCZnavody19ᚋmusicᚑmanagerᚋsrcᚋgraphᚋmodelᚐTidalConfigInput(ctx context.Context, v any) (model.TidalConfigInput, error) {
+	res, err := ec.unmarshalInputTidalConfigInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {

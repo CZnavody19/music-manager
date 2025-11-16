@@ -10,6 +10,18 @@ import (
 	"github.com/CZnavody19/music-manager/src/graph/model"
 )
 
+// SetGeneralConfig is the resolver for the setGeneralConfig field.
+func (r *mutationResolver) SetGeneralConfig(ctx context.Context, config model.GeneralConfigInput) (bool, error) {
+	cfg := r.InputMapper.MapGeneralConfigInput(config)
+
+	err := r.ConfigStore.SaveGeneralConfig(ctx, cfg)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // SetDiscordConfig is the resolver for the setDiscordConfig field.
 func (r *mutationResolver) SetDiscordConfig(ctx context.Context, config model.DiscordConfigInput) (bool, error) {
 	cfg := r.InputMapper.MapDiscordConfigInput(config)
@@ -46,6 +58,28 @@ func (r *mutationResolver) SetYoutubeConfig(ctx context.Context, config model.Yo
 	return true, nil
 }
 
+// SetTidalConfig is the resolver for the setTidalConfig field.
+func (r *mutationResolver) SetTidalConfig(ctx context.Context, config model.TidalConfigInput) (bool, error) {
+	cfg := r.InputMapper.MapTidalConfigInput(config)
+
+	err := r.ConfigStore.SaveTidalConfig(ctx, cfg)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// GetGeneralConfig is the resolver for the getGeneralConfig field.
+func (r *queryResolver) GetGeneralConfig(ctx context.Context) (*model.GeneralConfig, error) {
+	config, err := r.ConfigStore.GetGeneralConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Mapper.MapGeneralConfig(config), nil
+}
+
 // GetDiscordConfig is the resolver for the getDiscordConfig field.
 func (r *queryResolver) GetDiscordConfig(ctx context.Context) (*model.DiscordConfig, error) {
 	config, err := r.ConfigStore.GetDiscordConfig(ctx)
@@ -74,4 +108,14 @@ func (r *queryResolver) GetYoutubeConfig(ctx context.Context) (*model.YoutubeCon
 	}
 
 	return r.Mapper.MapYoutubeConfig(config), nil
+}
+
+// GetTidalConfig is the resolver for the getTidalConfig field.
+func (r *queryResolver) GetTidalConfig(ctx context.Context) (*model.TidalConfig, error) {
+	config, err := r.ConfigStore.GetTidalConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Mapper.MapTidalConfig(config), nil
 }

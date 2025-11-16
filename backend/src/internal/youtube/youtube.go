@@ -12,6 +12,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/domain"
 	"github.com/CZnavody19/music-manager/src/graph/model"
 	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
+	"github.com/CZnavody19/music-manager/src/internal/tidal"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/CZnavody19/music-manager/src/mq"
 	"github.com/go-jet/jet/v2/qrm"
@@ -31,6 +32,7 @@ type YouTube struct {
 	ytStore     *youtube.YouTubeStore
 	yt          *youtubeApi.Service
 	musicBrainz *musicbrainz.MusicBrainz
+	tidal       *tidal.Tidal
 	websockets  *websockets.Websockets
 	mq          *mq.MessageQueue
 }
@@ -61,7 +63,7 @@ func getYtService(ctx context.Context, cfg *domain.YouTubeConfig) (*youtubeApi.S
 	return yt, nil
 }
 
-func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore, mb *musicbrainz.MusicBrainz, ws *websockets.Websockets, mq *mq.MessageQueue) (*YouTube, error) {
+func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore, mb *musicbrainz.MusicBrainz, t *tidal.Tidal, ws *websockets.Websockets, mq *mq.MessageQueue) (*YouTube, error) {
 	ctx := context.Background()
 
 	config, err := cs.GetYoutubeConfig(ctx)
@@ -86,6 +88,7 @@ func NewYouTube(cs *config.ConfigStore, yts *youtube.YouTubeStore, mb *musicbrai
 		ytStore:     yts,
 		yt:          service,
 		musicBrainz: mb,
+		tidal:       t,
 		websockets:  ws,
 		mq:          mq,
 	}, nil
@@ -206,7 +209,7 @@ func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 		yt.musicBrainz.SearchQueue <- IdentificationRequest{
 			Video:   video,
 			YtStore: yt.ytStore,
-			Mq:      yt.mq,
+			Tidal:   yt.tidal,
 		}
 	}
 

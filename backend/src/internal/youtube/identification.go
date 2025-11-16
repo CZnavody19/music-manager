@@ -8,7 +8,7 @@ import (
 
 	"github.com/CZnavody19/music-manager/src/db/youtube"
 	"github.com/CZnavody19/music-manager/src/domain"
-	"github.com/CZnavody19/music-manager/src/mq"
+	"github.com/CZnavody19/music-manager/src/internal/tidal"
 	"github.com/CZnavody19/music-manager/src/utils"
 	"github.com/google/uuid"
 	"go.uploadedlobster.com/musicbrainzws2"
@@ -25,7 +25,7 @@ const (
 type IdentificationRequest struct {
 	Video   *domain.YouTubeVideo
 	YtStore *youtube.YouTubeStore
-	Mq      *mq.MessageQueue
+	Tidal   *tidal.Tidal
 }
 
 func (r IdentificationRequest) GetSearchQuery() string {
@@ -64,7 +64,7 @@ func (r IdentificationRequest) Done(ctx context.Context, track *domain.Track) er
 		return nil
 	}
 
-	return r.Mq.Download(ctx, track)
+	return r.Tidal.Download(ctx, track)
 }
 
 type parsed struct {

@@ -84,7 +84,7 @@ func newTidalTableImpl(schemaName, tableName, alias string) tidalTable {
 		EnabledColumn          = postgres.BoolColumn("enabled")
 		allColumns             = postgres.ColumnList{ActiveColumn, AuthTokenTypeColumn, AuthAccessTokenColumn, AuthRefreshTokenColumn, AuthExpiresAtColumn, AuthClientIDColumn, AuthClientSecretColumn, DownloadTimeoutColumn, DownloadRetriesColumn, DownloadThreadsColumn, AudioQualityColumn, EnabledColumn}
 		mutableColumns         = postgres.ColumnList{AuthTokenTypeColumn, AuthAccessTokenColumn, AuthRefreshTokenColumn, AuthExpiresAtColumn, AuthClientIDColumn, AuthClientSecretColumn, DownloadTimeoutColumn, DownloadRetriesColumn, DownloadThreadsColumn, AudioQualityColumn, EnabledColumn}
-		defaultColumns         = postgres.ColumnList{}
+		defaultColumns         = postgres.ColumnList{EnabledColumn}
 	)
 
 	return tidalTable{

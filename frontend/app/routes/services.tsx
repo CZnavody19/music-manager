@@ -60,6 +60,16 @@ export async function action({ request }: Route.ActionArgs) {
                 variables: { enable: body.enable },
             });
             return {};
+        case "tidal":
+            await client.mutate({
+                mutation: gql`
+                    mutation enableTidal($enable: Boolean!) {
+                        enableTidal(enable: $enable)
+                    }
+                `,
+                variables: { enable: body.enable },
+            });
+            return {};
         default:
             return {};
     }
@@ -72,9 +82,10 @@ export async function loader({ request }: Route.LoaderArgs) {
         query: gql`
             query getServiceStatus {
                 getServiceStatus {
-                    youtube,
-                    discord,
+                    youtube
+                    discord
                     plex
+                    tidal
                 }
             }
         `,
@@ -93,7 +104,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 
             <div className="flex flex-col w-full max-w-sm gap-4 mx-auto">
                 <h2 className="font-semibold text-2xl text-center">Downloaders</h2>
-                <Service id="tidal" name="Tidal" imageUrl="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tidal-dark.svg" enabled={false} />
+                <Service id="tidal" name="Tidal" imageUrl="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tidal-dark.svg" enabled={loaderData.status?.tidal ?? false} />
             </div>
 
             <div className="flex flex-col w-full max-w-sm gap-4 mx-auto">
