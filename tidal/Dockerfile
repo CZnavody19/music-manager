@@ -1,12 +1,14 @@
-FROM python:3.12-slim
-
+FROM python:3.12 AS builder
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install -r requirements.txt
-RUN pip install -U 'watchdog[watchmedo]'
+RUN pip install --prefix=/install -r requirements.txt
+
+FROM python:3.12-slim
+WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ffmpeg && \
     rm -rf /var/lib/apt/lists/*
+COPY --from=builder /install /usr/local
 COPY . .
 
-CMD ["watchmedo", "auto-restart", "--directory=./", "--pattern='*.py'", "--recursive", "python", "main.py"]
+CMD ["python", "main.py"]

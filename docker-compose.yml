@@ -1,68 +1,100 @@
-services:
-  db:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: music
-      POSTGRES_PASSWORD: music
-      POSTGRES_DB: musicdb
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-
-  mq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672" # Web UI
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    restart: unless-stopped
-
+networks:
+  database:
   backend:
-    build: ./backend
-    command: air
-    environment:
-      DATABASE_URL: postgres://music:music@db:5432/musicdb?sslmode=disable
-      RABBITMQ_URL: amqp://guest:guest@mq:5672/
-    depends_on:
-      - db
-      - mq
-    volumes:
-      - ./backend:/app
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-
-  tidal:
-    build: ./tidal
-    command: bash -c "pip install watchdog && watchmedo auto-restart --directory=./ --pattern='*.py' --recursive python main.py"
-    environment:
-      RABBITMQ_URL: amqp://guest:guest@mq:5672/
-      CONFIG_SERVICE_URL: http://backend:8080
-      PYTHONUNBUFFERED: 1
-    depends_on:
-      - mq
-    volumes:
-      - ./tidal:/app
-    restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    command: npm run dev
-    volumes:
-      - ./frontend:/app
-      # - /app/node_modules
-    ports:
-      - "5173:5173"
-    environment:
-      - API_URL=http://backend:8080/
-      - SESSION_SECRET=meowmeowmeow
-    depends_on:
-      - backend
-    restart: unless-stopped
 
 volumes:
-  db_data:
+  pgdata:
+
+services:
+  database:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U music -d musicdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    environment:
+      POSTGRES_USER: music
+      POSTGRES_PASSWORD: NMJ316ptAbAWdzT7
+      POSTGRES_DB: musicdb
+
+  rabbitmq:
+    image: rabbitmq:3-alpine # rabbitmq:3-management-alpine for web UI
+    restart: unless-stopped
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    environment:
+      RABBITMQ_DEFAULT_USER: music
+      RABBITMQ_DEFAULT_PASS: 7ni8KtK59QtRkiZy
+
+  backend:
+    image: ghcr.io/cznavody19/music-manager-backend:latest
+    restart: unless-stopped
+    networks:
+      - database
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs -X POST http://localhost:8080 \
+          -H 'Content-Type: application/json' \
+          -d '{\"query\":\"query { __typename }\"}' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    environment:
+      DB_CONNECTIONURI: postgres://music:NMJ316ptAbAWdzT7@database:5432/musicdb?sslmode=disable
+      DB_RUNMIGRATION: true
+      MQ_CONNECTIONURI: amqp://music:7ni8KtK59QtRkiZy@rabbitmq:5672/
+      SERVER_PLAYGROUNDENABLE: false
+      SERVER_INTROSPECTIONENABLE: false
+      SERVER_TOKENCHECKENABLE: true
+      SERVER_RUNCRON: true
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  frontend:
+    image: ghcr.io/cznavody19/music-manager-frontend:latest
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      - INTERNAL_API_URL=backend:8080/
+      - PUBLIC_API_URL=localhost:8080/
+      - SESSION_SECRET=52nV2OwHKf8iwq2x
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  tidal:
+    image: ghcr.io/cznavody19/music-manager-tidal:latest
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      PYTHONUNBUFFERED: 1
+      RABBITMQ_URL: amqp://music:7ni8KtK59QtRkiZy@rabbitmq:5672/
+      CONFIG_SERVICE_URL: http://backend:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy

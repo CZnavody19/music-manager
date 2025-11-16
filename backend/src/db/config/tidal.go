@@ -2,11 +2,13 @@ package config
 
 import (
 	"context"
+	"time"
 
 	"github.com/CZnavody19/music-manager/src/db"
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/config/model"
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/config/table"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/go-jet/jet/v2/qrm"
 )
 
 func (cs *ConfigStore) GetTidalConfig(ctx context.Context) (*domain.TidalConfig, error) {
@@ -14,6 +16,12 @@ func (cs *ConfigStore) GetTidalConfig(ctx context.Context) (*domain.TidalConfig,
 
 	var dest model.Tidal
 	err := stmt.QueryContext(ctx, cs.DB, &dest)
+	if err == qrm.ErrNoRows {
+		return &domain.TidalConfig{
+			Enabled:       false,
+			AuthExpiresAt: time.Unix(0, 0),
+		}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

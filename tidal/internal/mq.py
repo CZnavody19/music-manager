@@ -1,6 +1,8 @@
 from pika.adapters.blocking_connection import BlockingChannel
-from pika import BlockingConnection, ConnectionParameters
+from pika import BlockingConnection, URLParameters
 from pika.spec import Basic, BasicProperties
+
+from utils import get_env_var
 from .download import Downloader, NewDownloader
 from json import loads, dumps
 from models.track import Track
@@ -56,7 +58,7 @@ class MQ:
         self.init_chan.start_consuming()
 
 def NewMQ(downloader: Downloader) -> MQ:
-    connection = BlockingConnection(ConnectionParameters(host="mq"))
+    connection = BlockingConnection(URLParameters(get_env_var("RABBITMQ_URL")))
 
     chan = connection.channel()
 

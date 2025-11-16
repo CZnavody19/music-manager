@@ -14,7 +14,7 @@ export const getGQLClientFromSession = async (session: Session) => {
     return new ApolloClient({
         ssrMode: true,
         link: new HttpLink({
-            uri: process.env.API_URL,
+            uri: "http://" + process.env.INTERNAL_API_URL,
             headers: token ? {
                 Authorization: token,
             } : {},

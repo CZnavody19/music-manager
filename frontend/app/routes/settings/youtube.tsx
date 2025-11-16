@@ -53,7 +53,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         `,
     })
 
-    return { apiUrl: "http://localhost:8080/", data: data?.getYoutubeConfig }
+    return { apiUrl: "http://" + process.env.PUBLIC_API_URL, data: data?.getYoutubeConfig }
 }
 
 export default function Page({ loaderData, actionData }: Route.ComponentProps) {

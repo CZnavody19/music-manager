@@ -8,6 +8,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/config/model"
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/config/table"
 	"github.com/CZnavody19/music-manager/src/domain"
+	"github.com/go-jet/jet/v2/qrm"
 )
 
 type ConfigStore struct {
@@ -27,6 +28,9 @@ func (cs *ConfigStore) GetGeneralConfig(ctx context.Context) (*domain.GeneralCon
 
 	var dest model.General
 	err := stmt.QueryContext(ctx, cs.DB, &dest)
+	if err == qrm.ErrNoRows {
+		return &domain.GeneralConfig{}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

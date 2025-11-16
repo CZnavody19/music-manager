@@ -37,7 +37,7 @@ export const middleware: Route.MiddlewareFunction[] = [
 ];
 
 export async function loader() {
-	return { apiURL: "ws://localhost:8080" }
+	return { apiURL: "ws://" + process.env.PUBLIC_API_URL }
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
