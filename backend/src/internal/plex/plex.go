@@ -179,13 +179,18 @@ func (p *Plex) RefreshTracks(ctx context.Context) error {
 		return err
 	}
 
-	for _, track := range tracks {
+	unmatched, err := p.plexStore.GetTracks(ctx, true)
+	if err != nil {
+		return err
+	}
+
+	for _, track := range unmatched {
 		if track.Mbid == nil {
 			continue
 		}
 
 		p.musicBrainz.MatchQueue <- MatchRequest{
-			track:     &track,
+			track:     track,
 			plexStore: p.plexStore,
 		}
 	}

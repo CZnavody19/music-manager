@@ -205,7 +205,12 @@ func (yt *YouTube) RefreshPlaylist(ctx context.Context) error {
 		return err
 	}
 
-	for _, video := range videoArr {
+	unmatched, err := yt.ytStore.GetVideos(ctx, true)
+	if err != nil {
+		return err
+	}
+
+	for _, video := range unmatched {
 		yt.musicBrainz.SearchQueue <- IdentificationRequest{
 			Video:   video,
 			YtStore: yt.ytStore,
