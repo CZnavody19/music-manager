@@ -40,7 +40,7 @@ services:
       RABBITMQ_DEFAULT_PASS: 7ni8KtK59QtRkiZy
 
   backend:
-    image: ghcr.io/cznavody19/music-manager-backend:latest
+    image: ghcr.io/cznavody19/music-manager-backend:main
     restart: unless-stopped
     networks:
       - database
@@ -70,7 +70,7 @@ services:
       - "8080:8080"
 
   frontend:
-    image: ghcr.io/cznavody19/music-manager-frontend:latest
+    image: ghcr.io/cznavody19/music-manager-frontend:main
     restart: unless-stopped
     networks:
       - backend
@@ -85,7 +85,7 @@ services:
       - "3000:3000"
 
   tidal:
-    image: ghcr.io/cznavody19/music-manager-tidal:latest
+    image: ghcr.io/cznavody19/music-manager-tidal:main
     restart: unless-stopped
     networks:
       - backend
