@@ -62,7 +62,7 @@ export function TidalConfigForm({ form }: { form: ReturnType<typeof useRemixForm
                         render={({ field, fieldState }) => (
                             <Field data-invalid={fieldState.invalid}>
                                 <FieldLabel htmlFor="authExpiresAt">Expires at</FieldLabel>
-                                <NumberInput {...field} value={new Date(field.value).getTime() / 1000} onChange={(value) => field.onChange(new Date(value * 1000))} aria-invalid={fieldState.invalid} id="authExpiresAt" />
+                                <NumberInput {...field} value={new Date(field.value).getTime() / 1000} onChange={(value) => field.onChange(new Date(value * 1000).toISOString())} aria-invalid={fieldState.invalid} id="authExpiresAt" />
                                 {fieldState.invalid && (
                                     <FieldError errors={[fieldState.error]} />
                                 )}
