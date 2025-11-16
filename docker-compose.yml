@@ -99,3 +99,5 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - /home/cznav/Downloads # Adjust this path as needed

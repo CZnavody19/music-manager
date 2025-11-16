@@ -129,6 +129,8 @@ func (mq *MessageQueue) successWorker(ctx context.Context) {
 			zap.S().Error("Failed to refresh plex library", err)
 		}
 
+		zap.S().Info("Plex library refreshed")
+
 		err = mq.discord.SendMessage(ctx, &domain.DiscordMessage{
 			Title: "Download Complete",
 			Color: utils.IntPtr(65280), // green
@@ -147,7 +149,10 @@ func (mq *MessageQueue) successWorker(ctx context.Context) {
 		})
 		if err != nil {
 			zap.S().Error("Failed to send discord message", err)
+			return
 		}
+
+		zap.S().Info("Discord message sent")
 	}
 }
 
@@ -165,7 +170,7 @@ func (mq *MessageQueue) failWorker(ctx context.Context) {
 			continue
 		}
 
-		mq.discord.SendMessage(ctx, &domain.DiscordMessage{
+		err = mq.discord.SendMessage(ctx, &domain.DiscordMessage{
 			Title:       "Download Failed",
 			Description: msg.Error,
 			Color:       utils.IntPtr(16711680), // red
@@ -182,5 +187,11 @@ func (mq *MessageQueue) failWorker(ctx context.Context) {
 				},
 			},
 		})
+		if err != nil {
+			zap.S().Error("Failed to send discord message", err)
+			return
+		}
+
+		zap.S().Info("Discord message sent")
 	}
 }
