@@ -11,6 +11,34 @@ export function meta() {
 	];
 }
 
+export async function action({ request }: Route.ActionArgs) {
+	const body = await request.json();
+
+	if (!body.action) {
+		return {}
+	}
+
+	const { client } = await getGQLClient(request);
+
+	switch (body.action) {
+		case "delete":
+			if (!body.id) {
+				return {}
+			}
+
+			const { error: deleteErr } = await client.mutate({
+				mutation: gql`
+					mutation deleteTrack($id: UUID!) {
+						deleteTrack(id: $id)
+					}
+				`,
+				variables: { id: body.id },
+			});
+
+			return { errors: deleteErr };
+	}
+}
+
 export async function loader({ request }: Route.LoaderArgs) {
 	const { client } = await getGQLClient(request);
 

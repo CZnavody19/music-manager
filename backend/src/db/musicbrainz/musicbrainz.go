@@ -8,6 +8,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/db/gen/musicdb/public/table"
 	"github.com/CZnavody19/music-manager/src/domain"
 	"github.com/go-jet/jet/v2/postgres"
+	"github.com/google/uuid"
 )
 
 type MusicbrainzStore struct {
@@ -69,4 +70,15 @@ func (ms *MusicbrainzStore) GetTracks(ctx context.Context, notDownloaded bool) (
 	}
 
 	return ms.Mapper.MapTracksWithISRCs(dest), nil
+}
+
+func (ms *MusicbrainzStore) DeleteTrack(ctx context.Context, id uuid.UUID) error {
+	stmt := table.Tracks.DELETE().WHERE(table.Tracks.ID.EQ(postgres.UUID(id)))
+
+	_, err := stmt.ExecContext(ctx, ms.DB)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

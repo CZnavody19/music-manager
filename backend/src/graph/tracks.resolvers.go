@@ -8,7 +8,18 @@ import (
 	"context"
 
 	"github.com/CZnavody19/music-manager/src/graph/model"
+	"github.com/google/uuid"
 )
+
+// DeleteTrack is the resolver for the deleteTrack field.
+func (r *mutationResolver) DeleteTrack(ctx context.Context, id uuid.UUID) (bool, error) {
+	err := r.MusicBrainz.DeleteTrack(ctx, id)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
 
 // GetTracks is the resolver for the getTracks field.
 func (r *queryResolver) GetTracks(ctx context.Context) ([]*model.Track, error) {

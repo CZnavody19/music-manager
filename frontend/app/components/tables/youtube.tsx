@@ -54,11 +54,11 @@ const columns: ColumnDef<YouTubeVideo>[] = [
         cell: ({ row }) => {
             return (
                 <div className="flex flex-row items-center justify-center gap-2">
-                    {!row.original.linked && <Button variant="outline" size="icon" asChild>
+                    <Button variant="outline" size="icon" asChild>
                         <Link to={`match/${row.original.id}`} prefetch="intent">
                             <Plus />
                         </Link>
-                    </Button>}
+                    </Button>
                     <Button variant="outline" size="icon" asChild>
                         <Link to={`https://www.youtube.com/watch?v=${row.original.id}`} target="_blank" rel="noopener noreferrer">
                             <ExternalLink />

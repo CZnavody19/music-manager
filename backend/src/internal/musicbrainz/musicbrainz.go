@@ -9,6 +9,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/domain"
 	"github.com/CZnavody19/music-manager/src/graph/model"
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"go.uploadedlobster.com/musicbrainzws2"
 )
@@ -46,6 +47,10 @@ func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore, ws *websockets.Websockets
 
 func (mb *MusicBrainz) GetTracks(ctx context.Context, notDownloaded bool) ([]*domain.Track, error) {
 	return mb.mbStore.GetTracks(ctx, notDownloaded)
+}
+
+func (mb *MusicBrainz) DeleteTrack(ctx context.Context, id uuid.UUID) error {
+	return mb.mbStore.DeleteTrack(ctx, id)
 }
 
 func (mb *MusicBrainz) searchWorker(ctx context.Context) {
