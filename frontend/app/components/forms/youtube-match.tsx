@@ -16,7 +16,7 @@ export function YouTubeMatchForm({ form }: { form: ReturnType<typeof useRemixFor
         <Form className="px-6 py-4" onSubmit={form.handleSubmit} method="POST">
             <FieldSet>
                 <FieldLegend>Match</FieldLegend>
-                <FieldDescription>Match a YouTube video with a recording.<br />Use <i>artist:"" AND recording:""</i> to search.</FieldDescription>
+                <FieldDescription>Match a YouTube video with a recording.<br />Use <i>artist:"" AND recording:""</i> to search.<br />Use <i>00000000-0000-4000-8000-000000000000</i> to block the track from being downloaded.</FieldDescription>
                 <FieldGroup>
                     <Controller
                         name="trackId"
