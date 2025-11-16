@@ -36,6 +36,7 @@ services:
       retries: 5
       start_period: 10s
     environment:
+      RABBITMQ_ERLANG_COOKIE: 8jHqv0LNKGenW1WM
       RABBITMQ_DEFAULT_USER: music
       RABBITMQ_DEFAULT_PASS: 7ni8KtK59QtRkiZy
 
