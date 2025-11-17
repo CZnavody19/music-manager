@@ -2,6 +2,7 @@ from tidalapi.media import Track, AudioExtensions, Stream
 from tidalapi.session import Session
 
 from pathlib import Path
+from shutil import move
 from datetime import datetime
 from requests import Session as RequestSession, adapters, Response, get
 from os import path
@@ -131,7 +132,9 @@ class TidalDownloader:
         
         new_path.parent.mkdir(parents=True, exist_ok=True)
 
-        return file_path.replace(new_path)
+        move(file_path, new_path)
+
+        return new_path
 
     def _handle_metadata(self, track: Track, stream: Stream, path_media: Path) -> None:
         """
