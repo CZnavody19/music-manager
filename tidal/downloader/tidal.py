@@ -131,7 +131,7 @@ class TidalDownloader:
         
         new_path.parent.mkdir(parents=True, exist_ok=True)
 
-        return file_path.rename(new_path)
+        return file_path.replace(new_path)
 
     def _handle_metadata(self, track: Track, stream: Stream, path_media: Path) -> None:
         """

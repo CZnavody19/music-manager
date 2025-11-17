@@ -40,11 +40,11 @@ class MQ:
             return
 
         except Exception as e:
-            print(f"Download failed for track ID {tr.ID}")
+            print(f"Download failed for track ID {tr.ID}: ", str(e))
             chan.basic_publish("downloads_complete", "fail", dumps({
                 "track": tr.json(),
                 "file_path": None,
-                "error": "Download failed"
+                "error": str(e)
             }))
 
     def reload_req(self, ch: BlockingChannel, method: Basic.Deliver, properties: BasicProperties, body: bytes):
