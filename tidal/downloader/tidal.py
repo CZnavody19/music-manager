@@ -329,6 +329,8 @@ class TidalDownloader:
         Returns:
             None
         """
+        file_parts.sort(key=lambda p: int(str(p.stem).split("_")[-1]))
+
         with open(output_file, "wb") as outfile:
             for part in file_parts:
                 with open(part, "rb") as infile:
