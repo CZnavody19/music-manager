@@ -66,6 +66,7 @@ type ComplexityRoot struct {
 		ChangeLogin            func(childComplexity int, input model.LoginInput) int
 		DeletePlexTrack        func(childComplexity int, id int64) int
 		DeleteTrack            func(childComplexity int, id uuid.UUID) int
+		Download               func(childComplexity int) int
 		EnableDiscord          func(childComplexity int, enable bool) int
 		EnablePlex             func(childComplexity int, enable bool) int
 		EnableTidal            func(childComplexity int, enable bool) int
@@ -170,6 +171,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	Download(ctx context.Context) (bool, error)
 	Login(ctx context.Context, input model.LoginInput) (string, error)
 	Logout(ctx context.Context) (bool, error)
 	ChangeLogin(ctx context.Context, input model.LoginInput) (bool, error)
@@ -278,6 +280,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteTrack(childComplexity, args["id"].(uuid.UUID)), true
+	case "Mutation.download":
+		if e.complexity.Mutation.Download == nil {
+			break
+		}
+
+		return e.complexity.Mutation.Download(childComplexity), true
 	case "Mutation.enableDiscord":
 		if e.complexity.Mutation.EnableDiscord == nil {
 			break
@@ -1019,7 +1027,9 @@ scalar Time
 
 type Query
 
-type Mutation
+type Mutation {
+    download: Boolean!
+}
 
 type Subscription`, BuiltIn: false},
 	{Name: "../services.graphqls", Input: `type ServiceStatus {
@@ -1408,6 +1418,35 @@ func (ec *executionContext) fieldContext_GeneralConfig_tempPath(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_download(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_download,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().Download(ctx)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_download(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6196,6 +6235,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "download":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_download(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "login":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_login(ctx, field)

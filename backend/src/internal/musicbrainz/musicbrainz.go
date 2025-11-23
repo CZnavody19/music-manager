@@ -11,6 +11,7 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/websockets"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"go.uploadedlobster.com/mbtypes"
 	"go.uploadedlobster.com/musicbrainzws2"
 )
 
@@ -43,6 +44,29 @@ func NewMusicBrainz(mbs *musicbrainz.MusicbrainzStore, ws *websockets.Websockets
 	go mb.matchWorker(ctx)
 
 	return mb, nil
+}
+
+func (mb *MusicBrainz) SaveTrackByID(ctx context.Context, id uuid.UUID) error {
+	filter := musicbrainzws2.IncludesFilter{
+		Includes: []string{"isrcs", "artists"},
+	}
+
+	res, err := mb.client.LookupRecording(ctx, mbtypes.MBID(id.String()), filter)
+	if err != nil {
+		return err
+	}
+
+	track, err := mapTrack(res)
+	if err != nil {
+		return err
+	}
+
+	err = mb.mbStore.StoreTrack(ctx, track)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (mb *MusicBrainz) GetTracks(ctx context.Context, notDownloaded bool) ([]*domain.Track, error) {

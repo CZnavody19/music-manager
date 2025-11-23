@@ -250,5 +250,10 @@ func (yt *YouTube) MatchVideo(ctx context.Context, videoID string, trackID uuid.
 		return fmt.Errorf("YouTube integration is not enabled")
 	}
 
+	err := yt.musicBrainz.SaveTrackByID(ctx, trackID)
+	if err != nil {
+		return err
+	}
+
 	return yt.ytStore.LinkTrack(ctx, videoID, trackID)
 }

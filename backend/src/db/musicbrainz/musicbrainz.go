@@ -29,7 +29,9 @@ func (ms *MusicbrainzStore) StoreTrack(ctx context.Context, track domain.Track) 
 		return err
 	}
 
-	trackStmt := table.Tracks.INSERT(table.Tracks.AllColumns).MODEL(track).ON_CONFLICT().DO_NOTHING()
+	trackStmt := table.Tracks.INSERT(table.Tracks.AllColumns).MODEL(track)
+
+	trackStmt = db.DoUpsert(trackStmt, table.Tracks.ID, table.Tracks.MutableColumns.Except(table.Tracks.ID), table.Tracks.EXCLUDED.MutableColumns.Except(table.Tracks.ID))
 
 	_, err = trackStmt.ExecContext(ctx, tx)
 	if err != nil {

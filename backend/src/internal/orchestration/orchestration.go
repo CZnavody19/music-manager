@@ -7,7 +7,10 @@ import (
 	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/internal/tidal"
 	"github.com/CZnavody19/music-manager/src/internal/youtube"
+	"github.com/google/uuid"
 )
+
+var BLOCKED_TRACK = uuid.MustParse("00000000-0000-4000-8000-000000000000")
 
 type Orchestrator struct {
 	musicbrainz *musicbrainz.MusicBrainz
@@ -48,6 +51,10 @@ func (o *Orchestrator) Download(ctx context.Context) error {
 	}
 
 	for _, track := range tracks {
+		if track.ID == BLOCKED_TRACK {
+			continue
+		}
+
 		err = o.tidal.Download(ctx, track)
 		if err != nil {
 			return err

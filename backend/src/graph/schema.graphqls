@@ -4,6 +4,8 @@ scalar Time
 
 type Query
 
-type Mutation
+type Mutation {
+    download: Boolean!
+}
 
 type Subscription
