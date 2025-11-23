@@ -116,9 +116,12 @@ class TidalDownloader:
 
         temp_file.unlink(missing_ok=True)
 
-        self._handle_metadata(track, stream, flac_file)
+        metadata = self._handle_metadata(track, stream, flac_file)
 
         final_file = self._move_file(flac_file, track)
+
+        if metadata and metadata.lyrics:
+            self._save_lyrics(metadata.lyrics, final_file)
 
         return final_file
 
@@ -135,8 +138,14 @@ class TidalDownloader:
         move(file_path, new_path)
 
         return new_path
+    
+    def _save_lyrics(self, lyrics: str, path_media: Path) -> None:
+        lyrics_path = path_media.with_suffix(".lrc")
 
-    def _handle_metadata(self, track: Track, stream: Stream, path_media: Path) -> None:
+        with open(lyrics_path, "w", encoding="utf-8") as f:
+            f.write(lyrics)
+
+    def _handle_metadata(self, track: Track, stream: Stream, path_media: Path) -> Metadata | None:
         """
         Handles the metadata for a given track and stream, and saves it to the specified media path.
 
@@ -163,7 +172,7 @@ class TidalDownloader:
             - Saves the metadata using the `Metadata` class.
         """
         if not track.album:
-            return
+            return None
 
         release_date: str = (
             track.album.available_release_date.strftime("%Y-%m-%d")
@@ -220,6 +229,8 @@ class TidalDownloader:
         )
 
         m.save()
+
+        return m
 
     def _cover_data(self, url: str | None = None, path_file: str | None = None) -> bytes | None:
         """Retrieve cover image data from a URL or file.
