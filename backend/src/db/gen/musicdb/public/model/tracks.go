@@ -12,8 +12,9 @@ import (
 )
 
 type Tracks struct {
-	ID     uuid.UUID `sql:"primary_key"`
-	Title  string
-	Artist string
-	Length int32
+	ID         uuid.UUID `sql:"primary_key"`
+	Title      string
+	Artist     string
+	Length     int32
+	Downloaded *bool
 }

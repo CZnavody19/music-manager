@@ -77,6 +77,10 @@ func (mb *MusicBrainz) DeleteTrack(ctx context.Context, id uuid.UUID) error {
 	return mb.mbStore.DeleteTrack(ctx, id)
 }
 
+func (mb *MusicBrainz) MarkDownloaded(ctx context.Context, id uuid.UUID, downloaded bool) error {
+	return mb.mbStore.MarkDownloaded(ctx, id, downloaded)
+}
+
 func (mb *MusicBrainz) searchWorker(ctx context.Context) {
 	zap.S().Info("MusicBrainz search worker started")
 

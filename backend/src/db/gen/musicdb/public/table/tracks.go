@@ -17,10 +17,11 @@ type tracksTable struct {
 	postgres.Table
 
 	// Columns
-	ID     postgres.ColumnString
-	Title  postgres.ColumnString
-	Artist postgres.ColumnString
-	Length postgres.ColumnInteger
+	ID         postgres.ColumnString
+	Title      postgres.ColumnString
+	Artist     postgres.ColumnString
+	Length     postgres.ColumnInteger
+	Downloaded postgres.ColumnBool
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -62,23 +63,25 @@ func newTracksTable(schemaName, tableName, alias string) *TracksTable {
 
 func newTracksTableImpl(schemaName, tableName, alias string) tracksTable {
 	var (
-		IDColumn       = postgres.StringColumn("id")
-		TitleColumn    = postgres.StringColumn("title")
-		ArtistColumn   = postgres.StringColumn("artist")
-		LengthColumn   = postgres.IntegerColumn("length")
-		allColumns     = postgres.ColumnList{IDColumn, TitleColumn, ArtistColumn, LengthColumn}
-		mutableColumns = postgres.ColumnList{TitleColumn, ArtistColumn, LengthColumn}
-		defaultColumns = postgres.ColumnList{}
+		IDColumn         = postgres.StringColumn("id")
+		TitleColumn      = postgres.StringColumn("title")
+		ArtistColumn     = postgres.StringColumn("artist")
+		LengthColumn     = postgres.IntegerColumn("length")
+		DownloadedColumn = postgres.BoolColumn("downloaded")
+		allColumns       = postgres.ColumnList{IDColumn, TitleColumn, ArtistColumn, LengthColumn, DownloadedColumn}
+		mutableColumns   = postgres.ColumnList{TitleColumn, ArtistColumn, LengthColumn, DownloadedColumn}
+		defaultColumns   = postgres.ColumnList{}
 	)
 
 	return tracksTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		ID:     IDColumn,
-		Title:  TitleColumn,
-		Artist: ArtistColumn,
-		Length: LengthColumn,
+		ID:         IDColumn,
+		Title:      TitleColumn,
+		Artist:     ArtistColumn,
+		Length:     LengthColumn,
+		Downloaded: DownloadedColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

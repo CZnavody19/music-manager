@@ -138,6 +138,7 @@ func (m *Mapper) MapTrackWithISRCs(input TrackWithISRCs) *domain.Track {
 		ISRCs:         isrcs,
 		LinkedYoutube: input.YoutubeExists,
 		LinkedPlex:    input.PlexExists,
+		Downloaded:    input.Downloaded,
 	}
 }
 

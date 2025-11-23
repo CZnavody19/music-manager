@@ -6,6 +6,7 @@ import (
 
 	"github.com/CZnavody19/music-manager/src/domain"
 	"github.com/CZnavody19/music-manager/src/internal/discord"
+	"github.com/CZnavody19/music-manager/src/internal/musicbrainz"
 	"github.com/CZnavody19/music-manager/src/internal/plex"
 	"github.com/CZnavody19/music-manager/src/utils"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -16,11 +17,12 @@ type MessageQueue struct {
 	conn         *amqp.Connection
 	discord      *discord.Discord
 	plex         *plex.Plex
+	musicbrainz  *musicbrainz.MusicBrainz
 	success_chan <-chan amqp.Delivery
 	fail_chan    <-chan amqp.Delivery
 }
 
-func NewMessageQueue(conn *amqp.Connection, discord *discord.Discord, plex *plex.Plex) (*MessageQueue, error) {
+func NewMessageQueue(conn *amqp.Connection, discord *discord.Discord, plex *plex.Plex, mb *musicbrainz.MusicBrainz) (*MessageQueue, error) {
 	ctx := context.Background()
 
 	chann, err := conn.Channel()
@@ -62,6 +64,7 @@ func NewMessageQueue(conn *amqp.Connection, discord *discord.Discord, plex *plex
 		conn:         conn,
 		discord:      discord,
 		plex:         plex,
+		musicbrainz:  mb,
 		success_chan: success_chan,
 		fail_chan:    fail_chan,
 	}
@@ -124,6 +127,11 @@ func (mq *MessageQueue) successWorker(ctx context.Context) {
 			continue
 		}
 
+		err = mq.musicbrainz.MarkDownloaded(ctx, msg.Track.ID, true)
+		if err != nil {
+			zap.S().Error("Failed to mark track as downloaded", err)
+		}
+
 		err = mq.plex.RefreshLibrary(ctx)
 		if err != nil {
 			zap.S().Error("Failed to refresh plex library", err)
@@ -168,6 +176,11 @@ func (mq *MessageQueue) failWorker(ctx context.Context) {
 		if err != nil {
 			zap.S().Error("Failed to unmarshal success message", err)
 			continue
+		}
+
+		err = mq.musicbrainz.MarkDownloaded(ctx, msg.Track.ID, false)
+		if err != nil {
+			zap.S().Error("Failed to mark track as not downloaded", err)
 		}
 
 		err = mq.discord.SendMessage(ctx, &domain.DiscordMessage{

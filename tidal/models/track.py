@@ -22,9 +22,9 @@ class Track:
         self.Title = data["Title"]
         self.Artist = data["Artist"]
         self.Length = data["Length"]
-        self.ISRCs = data.get("ISRCs", [])
-        self.LinkedYoutube = data.get("LinkedYoutube", False)
-        self.LinkedPlex = data.get("LinkedPlex", False)
+        self.ISRCs = data["ISRCs"] if data["ISRCs"] is not None else []
+        self.LinkedYoutube = data["LinkedYoutube"]
+        self.LinkedPlex = data["LinkedPlex"]
 
     def __str__(self) -> str:
         return f"Track(ID={self.ID}, Title={self.Title}, Artist={self.Artist}, Length={self.Length})"

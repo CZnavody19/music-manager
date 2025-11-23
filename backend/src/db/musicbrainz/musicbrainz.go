@@ -62,7 +62,7 @@ func (ms *MusicbrainzStore) GetTracks(ctx context.Context, notDownloaded bool) (
 		LEFT_JOIN(table.TrackIsrcs, table.TrackIsrcs.TrackID.EQ(table.Tracks.ID)))
 
 	if notDownloaded {
-		stmt = stmt.WHERE(plexStmt.IS_FALSE())
+		stmt = stmt.WHERE(plexStmt.IS_FALSE().AND(table.Tracks.Downloaded.IS_NULL()))
 	}
 
 	var dest []db.TrackWithISRCs
@@ -76,6 +76,17 @@ func (ms *MusicbrainzStore) GetTracks(ctx context.Context, notDownloaded bool) (
 
 func (ms *MusicbrainzStore) DeleteTrack(ctx context.Context, id uuid.UUID) error {
 	stmt := table.Tracks.DELETE().WHERE(table.Tracks.ID.EQ(postgres.UUID(id)))
+
+	_, err := stmt.ExecContext(ctx, ms.DB)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ms *MusicbrainzStore) MarkDownloaded(ctx context.Context, id uuid.UUID, downloaded bool) error {
+	stmt := table.Tracks.UPDATE().SET(table.Tracks.Downloaded.SET(postgres.Bool(downloaded))).WHERE(table.Tracks.ID.EQ(postgres.UUID(id)))
 
 	_, err := stmt.ExecContext(ctx, ms.DB)
 	if err != nil {

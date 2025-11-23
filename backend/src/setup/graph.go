@@ -53,7 +53,7 @@ func NewResolver(dbConn *sql.DB, mqConn *amqp.Connection, config config.Config) 
 		return nil, err
 	}
 
-	mq, err := mq.NewMessageQueue(mqConn, dsc, plx)
+	mq, err := mq.NewMessageQueue(mqConn, dsc, plx, mb)
 	if err != nil {
 		return nil, err
 	}

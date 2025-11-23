@@ -26,4 +26,5 @@ type Track struct {
 	ISRCs         []string
 	LinkedYoutube bool
 	LinkedPlex    bool
+	Downloaded    *bool
 }
