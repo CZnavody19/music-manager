@@ -53,6 +53,10 @@ export async function loader({ request }: Route.LoaderArgs) {
                     downloadRetries
                     downloadThreads
                     audioQuality
+                    filePermissions
+                    directoryPermissions
+                    owner
+                    group
                 }
             }
         `,

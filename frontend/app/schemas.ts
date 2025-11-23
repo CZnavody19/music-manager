@@ -42,6 +42,10 @@ export const TidalSettingsSchema = z.object({
         ["LOW", "HIGH", "LOSSLESS", "HI_RES_LOSSLESS"].includes(val),
         "Audio quality must be one of: LOW, HIGH, LOSSLESS, HI_RES_LOSSLESS."
     ),
+    filePermissions: z.number().min(0, "File permissions must be a positive integer.").max(0o777, "File permissions cannot exceed 777."),
+    directoryPermissions: z.number().min(0, "Directory permissions must be a positive integer.").max(0o777, "Directory permissions cannot exceed 777."),
+    owner: z.number().min(0, "Owner must be a positive integer."),
+    group: z.number().min(0, "Group must be a positive integer."),
 });
 
 export const YouTubeMatchSchema = z.object({

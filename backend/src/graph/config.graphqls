@@ -51,6 +51,10 @@ type TidalConfig {
     downloadRetries: Int!
     downloadThreads: Int!
     audioQuality: String!
+    filePermissions: Int!
+    directoryPermissions: Int!
+    owner: Int!
+    group: Int!
 }
 
 input TidalConfigInput {
@@ -64,6 +68,10 @@ input TidalConfigInput {
     downloadRetries: Int!
     downloadThreads: Int!
     audioQuality: String!
+    filePermissions: Int!
+    directoryPermissions: Int!
+    owner: Int!
+    group: Int!
 }
 
 extend type Query {

@@ -62,6 +62,10 @@ def NewDownloader(comparator: Comparator) -> Downloader:
             download_retries=tidal_cfg.DownloadRetries,
             download_threads=tidal_cfg.DownloadThreads,
             audio_quality=Quality(tidal_cfg.AudioQuality),
+            file_permissions=tidal_cfg.FilePermissions,
+            directory_permissions=tidal_cfg.DirectoryPermissions,
+            owner=tidal_cfg.Owner,
+            group=tidal_cfg.Group,
             download_path=general_cfg.DownloadPath,
             temp_path=general_cfg.TempPath,
         )

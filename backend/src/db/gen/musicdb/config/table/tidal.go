@@ -17,18 +17,22 @@ type tidalTable struct {
 	postgres.Table
 
 	// Columns
-	Active           postgres.ColumnBool
-	AuthTokenType    postgres.ColumnString
-	AuthAccessToken  postgres.ColumnString
-	AuthRefreshToken postgres.ColumnString
-	AuthExpiresAt    postgres.ColumnTimestampz
-	AuthClientID     postgres.ColumnString
-	AuthClientSecret postgres.ColumnString
-	DownloadTimeout  postgres.ColumnInteger
-	DownloadRetries  postgres.ColumnInteger
-	DownloadThreads  postgres.ColumnInteger
-	AudioQuality     postgres.ColumnString
-	Enabled          postgres.ColumnBool
+	Active               postgres.ColumnBool
+	AuthTokenType        postgres.ColumnString
+	AuthAccessToken      postgres.ColumnString
+	AuthRefreshToken     postgres.ColumnString
+	AuthExpiresAt        postgres.ColumnTimestampz
+	AuthClientID         postgres.ColumnString
+	AuthClientSecret     postgres.ColumnString
+	DownloadTimeout      postgres.ColumnInteger
+	DownloadRetries      postgres.ColumnInteger
+	DownloadThreads      postgres.ColumnInteger
+	AudioQuality         postgres.ColumnString
+	Enabled              postgres.ColumnBool
+	FilePermissions      postgres.ColumnInteger
+	DirectoryPermissions postgres.ColumnInteger
+	Ownr                 postgres.ColumnInteger
+	Grp                  postgres.ColumnInteger
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -70,39 +74,47 @@ func newTidalTable(schemaName, tableName, alias string) *TidalTable {
 
 func newTidalTableImpl(schemaName, tableName, alias string) tidalTable {
 	var (
-		ActiveColumn           = postgres.BoolColumn("active")
-		AuthTokenTypeColumn    = postgres.StringColumn("auth_token_type")
-		AuthAccessTokenColumn  = postgres.StringColumn("auth_access_token")
-		AuthRefreshTokenColumn = postgres.StringColumn("auth_refresh_token")
-		AuthExpiresAtColumn    = postgres.TimestampzColumn("auth_expires_at")
-		AuthClientIDColumn     = postgres.StringColumn("auth_client_id")
-		AuthClientSecretColumn = postgres.StringColumn("auth_client_secret")
-		DownloadTimeoutColumn  = postgres.IntegerColumn("download_timeout")
-		DownloadRetriesColumn  = postgres.IntegerColumn("download_retries")
-		DownloadThreadsColumn  = postgres.IntegerColumn("download_threads")
-		AudioQualityColumn     = postgres.StringColumn("audio_quality")
-		EnabledColumn          = postgres.BoolColumn("enabled")
-		allColumns             = postgres.ColumnList{ActiveColumn, AuthTokenTypeColumn, AuthAccessTokenColumn, AuthRefreshTokenColumn, AuthExpiresAtColumn, AuthClientIDColumn, AuthClientSecretColumn, DownloadTimeoutColumn, DownloadRetriesColumn, DownloadThreadsColumn, AudioQualityColumn, EnabledColumn}
-		mutableColumns         = postgres.ColumnList{AuthTokenTypeColumn, AuthAccessTokenColumn, AuthRefreshTokenColumn, AuthExpiresAtColumn, AuthClientIDColumn, AuthClientSecretColumn, DownloadTimeoutColumn, DownloadRetriesColumn, DownloadThreadsColumn, AudioQualityColumn, EnabledColumn}
-		defaultColumns         = postgres.ColumnList{EnabledColumn}
+		ActiveColumn               = postgres.BoolColumn("active")
+		AuthTokenTypeColumn        = postgres.StringColumn("auth_token_type")
+		AuthAccessTokenColumn      = postgres.StringColumn("auth_access_token")
+		AuthRefreshTokenColumn     = postgres.StringColumn("auth_refresh_token")
+		AuthExpiresAtColumn        = postgres.TimestampzColumn("auth_expires_at")
+		AuthClientIDColumn         = postgres.StringColumn("auth_client_id")
+		AuthClientSecretColumn     = postgres.StringColumn("auth_client_secret")
+		DownloadTimeoutColumn      = postgres.IntegerColumn("download_timeout")
+		DownloadRetriesColumn      = postgres.IntegerColumn("download_retries")
+		DownloadThreadsColumn      = postgres.IntegerColumn("download_threads")
+		AudioQualityColumn         = postgres.StringColumn("audio_quality")
+		EnabledColumn              = postgres.BoolColumn("enabled")
+		FilePermissionsColumn      = postgres.IntegerColumn("file_permissions")
+		DirectoryPermissionsColumn = postgres.IntegerColumn("directory_permissions")
+		OwnrColumn                 = postgres.IntegerColumn("ownr")
+		GrpColumn                  = postgres.IntegerColumn("grp")
+		allColumns                 = postgres.ColumnList{ActiveColumn, AuthTokenTypeColumn, AuthAccessTokenColumn, AuthRefreshTokenColumn, AuthExpiresAtColumn, AuthClientIDColumn, AuthClientSecretColumn, DownloadTimeoutColumn, DownloadRetriesColumn, DownloadThreadsColumn, AudioQualityColumn, EnabledColumn, FilePermissionsColumn, DirectoryPermissionsColumn, OwnrColumn, GrpColumn}
+		mutableColumns             = postgres.ColumnList{AuthTokenTypeColumn, AuthAccessTokenColumn, AuthRefreshTokenColumn, AuthExpiresAtColumn, AuthClientIDColumn, AuthClientSecretColumn, DownloadTimeoutColumn, DownloadRetriesColumn, DownloadThreadsColumn, AudioQualityColumn, EnabledColumn, FilePermissionsColumn, DirectoryPermissionsColumn, OwnrColumn, GrpColumn}
+		defaultColumns             = postgres.ColumnList{EnabledColumn, FilePermissionsColumn, DirectoryPermissionsColumn, OwnrColumn, GrpColumn}
 	)
 
 	return tidalTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		Active:           ActiveColumn,
-		AuthTokenType:    AuthTokenTypeColumn,
-		AuthAccessToken:  AuthAccessTokenColumn,
-		AuthRefreshToken: AuthRefreshTokenColumn,
-		AuthExpiresAt:    AuthExpiresAtColumn,
-		AuthClientID:     AuthClientIDColumn,
-		AuthClientSecret: AuthClientSecretColumn,
-		DownloadTimeout:  DownloadTimeoutColumn,
-		DownloadRetries:  DownloadRetriesColumn,
-		DownloadThreads:  DownloadThreadsColumn,
-		AudioQuality:     AudioQualityColumn,
-		Enabled:          EnabledColumn,
+		Active:               ActiveColumn,
+		AuthTokenType:        AuthTokenTypeColumn,
+		AuthAccessToken:      AuthAccessTokenColumn,
+		AuthRefreshToken:     AuthRefreshTokenColumn,
+		AuthExpiresAt:        AuthExpiresAtColumn,
+		AuthClientID:         AuthClientIDColumn,
+		AuthClientSecret:     AuthClientSecretColumn,
+		DownloadTimeout:      DownloadTimeoutColumn,
+		DownloadRetries:      DownloadRetriesColumn,
+		DownloadThreads:      DownloadThreadsColumn,
+		AudioQuality:         AudioQualityColumn,
+		Enabled:              EnabledColumn,
+		FilePermissions:      FilePermissionsColumn,
+		DirectoryPermissions: DirectoryPermissionsColumn,
+		Ownr:                 OwnrColumn,
+		Grp:                  GrpColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

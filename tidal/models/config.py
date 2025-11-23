@@ -26,6 +26,10 @@ class TidalConfig:
     DownloadRetries: int
     DownloadThreads: int
     AudioQuality: str
+    FilePermissions: int
+    DirectoryPermissions: int
+    Owner: int
+    Group: int
 
     def __init__(self, data: dict) -> None:
         assert "Enabled" in data
@@ -39,6 +43,10 @@ class TidalConfig:
         assert "DownloadRetries" in data
         assert "DownloadThreads" in data
         assert "AudioQuality" in data
+        assert "FilePermissions" in data
+        assert "DirectoryPermissions" in data
+        assert "Owner" in data
+        assert "Group" in data
 
         self.Enabled = data["Enabled"]
         self.AuthTokenType = data["AuthTokenType"]
@@ -51,6 +59,10 @@ class TidalConfig:
         self.DownloadRetries = data["DownloadRetries"]
         self.DownloadThreads = data["DownloadThreads"]
         self.AudioQuality = data["AudioQuality"]
+        self.FilePermissions = data["FilePermissions"]
+        self.DirectoryPermissions = data["DirectoryPermissions"]
+        self.Owner = data["Owner"]
+        self.Group = data["Group"]
 
     def __str__(self) -> str:
-        return f"TidalConfig(AuthTokenType={self.AuthTokenType}, AuthAccessToken={self.AuthAccessToken}, AuthRefreshToken={self.AuthRefreshToken}, AuthExpiresAt={self.AuthExpiresAt}, AuthClientID={self.AuthClientID}, AuthClientSecret={self.AuthClientSecret}, DownloadTimeout={self.DownloadTimeout}, DownloadRetries={self.DownloadRetries}, DownloadThreads={self.DownloadThreads}, AudioQuality={self.AudioQuality})"
+        return f"TidalConfig(AuthTokenType={self.AuthTokenType}, AuthAccessToken={self.AuthAccessToken}, AuthRefreshToken={self.AuthRefreshToken}, AuthExpiresAt={self.AuthExpiresAt}, AuthClientID={self.AuthClientID}, AuthClientSecret={self.AuthClientSecret}, DownloadTimeout={self.DownloadTimeout}, DownloadRetries={self.DownloadRetries}, DownloadThreads={self.DownloadThreads}, AudioQuality={self.AudioQuality}, FilePermissions={self.FilePermissions}, DirectoryPermissions={self.DirectoryPermissions}, Owner={self.Owner}, Group={self.Group})"

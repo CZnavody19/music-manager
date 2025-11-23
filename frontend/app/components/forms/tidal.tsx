@@ -9,6 +9,7 @@ import { Button } from "~/components/ui/button";
 import { TidalSettingsSchema } from "~/schemas";
 import { NumberInput } from "~/components/input/number";
 import { TabSelect } from "~/components/input/tab-select";
+import { ChmodInput } from "~/components/input/chmod";
 
 export const resolver = zodResolver(TidalSettingsSchema);
 export type formType = z.infer<typeof TidalSettingsSchema>;
@@ -140,6 +141,54 @@ export function TidalConfigForm({ form }: { form: ReturnType<typeof useRemixForm
                                     { value: "LOSSLESS", label: "FLAC" },
                                     { value: "HI_RES_LOSSLESS", label: "HiRes FLAC" }
                                 ]} />
+                                {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                )}
+                            </Field>
+                        )} />
+                    <Controller
+                        name="filePermissions"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="filePermissions">File Permissions</FieldLabel>
+                                <ChmodInput {...field} aria-invalid={fieldState.invalid} id="filePermissions" />
+                                {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                )}
+                            </Field>
+                        )} />
+                    <Controller
+                        name="directoryPermissions"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="directoryPermissions">Directory Permissions</FieldLabel>
+                                <ChmodInput {...field} aria-invalid={fieldState.invalid} id="directoryPermissions" />
+                                {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                )}
+                            </Field>
+                        )} />
+                    <Controller
+                        name="owner"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="owner">Owner</FieldLabel>
+                                <NumberInput {...field} aria-invalid={fieldState.invalid} id="owner" />
+                                {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                )}
+                            </Field>
+                        )} />
+                    <Controller
+                        name="group"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="group">Group</FieldLabel>
+                                <NumberInput {...field} aria-invalid={fieldState.invalid} id="group" />
                                 {fieldState.invalid && (
                                     <FieldError errors={[fieldState.error]} />
                                 )}

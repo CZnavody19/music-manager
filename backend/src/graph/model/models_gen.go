@@ -79,29 +79,37 @@ type Task struct {
 }
 
 type TidalConfig struct {
-	AuthTokenType    string    `json:"authTokenType"`
-	AuthAccessToken  string    `json:"authAccessToken"`
-	AuthRefreshToken string    `json:"authRefreshToken"`
-	AuthExpiresAt    time.Time `json:"authExpiresAt"`
-	AuthClientID     string    `json:"authClientID"`
-	AuthClientSecret string    `json:"authClientSecret"`
-	DownloadTimeout  int64     `json:"downloadTimeout"`
-	DownloadRetries  int64     `json:"downloadRetries"`
-	DownloadThreads  int64     `json:"downloadThreads"`
-	AudioQuality     string    `json:"audioQuality"`
+	AuthTokenType        string    `json:"authTokenType"`
+	AuthAccessToken      string    `json:"authAccessToken"`
+	AuthRefreshToken     string    `json:"authRefreshToken"`
+	AuthExpiresAt        time.Time `json:"authExpiresAt"`
+	AuthClientID         string    `json:"authClientID"`
+	AuthClientSecret     string    `json:"authClientSecret"`
+	DownloadTimeout      int64     `json:"downloadTimeout"`
+	DownloadRetries      int64     `json:"downloadRetries"`
+	DownloadThreads      int64     `json:"downloadThreads"`
+	AudioQuality         string    `json:"audioQuality"`
+	FilePermissions      int64     `json:"filePermissions"`
+	DirectoryPermissions int64     `json:"directoryPermissions"`
+	Owner                int64     `json:"owner"`
+	Group                int64     `json:"group"`
 }
 
 type TidalConfigInput struct {
-	AuthTokenType    string    `json:"authTokenType"`
-	AuthAccessToken  string    `json:"authAccessToken"`
-	AuthRefreshToken string    `json:"authRefreshToken"`
-	AuthExpiresAt    time.Time `json:"authExpiresAt"`
-	AuthClientID     string    `json:"authClientID"`
-	AuthClientSecret string    `json:"authClientSecret"`
-	DownloadTimeout  int64     `json:"downloadTimeout"`
-	DownloadRetries  int64     `json:"downloadRetries"`
-	DownloadThreads  int64     `json:"downloadThreads"`
-	AudioQuality     string    `json:"audioQuality"`
+	AuthTokenType        string    `json:"authTokenType"`
+	AuthAccessToken      string    `json:"authAccessToken"`
+	AuthRefreshToken     string    `json:"authRefreshToken"`
+	AuthExpiresAt        time.Time `json:"authExpiresAt"`
+	AuthClientID         string    `json:"authClientID"`
+	AuthClientSecret     string    `json:"authClientSecret"`
+	DownloadTimeout      int64     `json:"downloadTimeout"`
+	DownloadRetries      int64     `json:"downloadRetries"`
+	DownloadThreads      int64     `json:"downloadThreads"`
+	AudioQuality         string    `json:"audioQuality"`
+	FilePermissions      int64     `json:"filePermissions"`
+	DirectoryPermissions int64     `json:"directoryPermissions"`
+	Owner                int64     `json:"owner"`
+	Group                int64     `json:"group"`
 }
 
 type Track struct {

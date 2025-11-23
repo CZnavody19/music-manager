@@ -12,16 +12,20 @@ import (
 )
 
 type Tidal struct {
-	Active           bool `sql:"primary_key"`
-	AuthTokenType    string
-	AuthAccessToken  string
-	AuthRefreshToken string
-	AuthExpiresAt    time.Time
-	AuthClientID     string
-	AuthClientSecret string
-	DownloadTimeout  int32
-	DownloadRetries  int32
-	DownloadThreads  int32
-	AudioQuality     string
-	Enabled          bool
+	Active               bool `sql:"primary_key"`
+	AuthTokenType        string
+	AuthAccessToken      string
+	AuthRefreshToken     string
+	AuthExpiresAt        time.Time
+	AuthClientID         string
+	AuthClientSecret     string
+	DownloadTimeout      int32
+	DownloadRetries      int32
+	DownloadThreads      int32
+	AudioQuality         string
+	Enabled              bool
+	FilePermissions      int32
+	DirectoryPermissions int32
+	Ownr                 int32
+	Grp                  int32
 }

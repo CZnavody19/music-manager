@@ -50,15 +50,19 @@ func (im *InputMapper) MapYoutubeConfigInput(input model.YoutubeConfigInput) *do
 
 func (im *InputMapper) MapTidalConfigInput(input model.TidalConfigInput) *domain.TidalConfig {
 	return &domain.TidalConfig{
-		AuthTokenType:    input.AuthTokenType,
-		AuthAccessToken:  input.AuthAccessToken,
-		AuthRefreshToken: input.AuthRefreshToken,
-		AuthExpiresAt:    input.AuthExpiresAt,
-		AuthClientID:     input.AuthClientID,
-		AuthClientSecret: input.AuthClientSecret,
-		DownloadTimeout:  input.DownloadTimeout,
-		DownloadRetries:  input.DownloadRetries,
-		DownloadThreads:  input.DownloadThreads,
-		AudioQuality:     input.AudioQuality,
+		AuthTokenType:        input.AuthTokenType,
+		AuthAccessToken:      input.AuthAccessToken,
+		AuthRefreshToken:     input.AuthRefreshToken,
+		AuthExpiresAt:        input.AuthExpiresAt,
+		AuthClientID:         input.AuthClientID,
+		AuthClientSecret:     input.AuthClientSecret,
+		DownloadTimeout:      input.DownloadTimeout,
+		DownloadRetries:      input.DownloadRetries,
+		DownloadThreads:      input.DownloadThreads,
+		AudioQuality:         input.AudioQuality,
+		FilePermissions:      input.FilePermissions,
+		DirectoryPermissions: input.DirectoryPermissions,
+		Owner:                input.Owner,
+		Group:                input.Group,
 	}
 }

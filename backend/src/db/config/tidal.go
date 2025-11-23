@@ -33,9 +33,13 @@ func (cs *ConfigStore) SaveTidalConfig(ctx context.Context, config *domain.Tidal
 	stmt := table.Tidal.INSERT(table.Tidal.AllColumns.Except(table.Tidal.Enabled)).MODEL(struct {
 		Active bool
 		domain.TidalConfig
+		Ownr int64
+		Grp  int64
 	}{
 		Active:      true,
 		TidalConfig: *config,
+		Ownr:        config.Owner,
+		Grp:         config.Group,
 	})
 
 	stmt = db.DoUpsert(stmt, table.Tidal.Active, table.Tidal.MutableColumns.Except(table.Tidal.Enabled), table.Tidal.EXCLUDED.MutableColumns.Except(table.Tidal.Enabled))

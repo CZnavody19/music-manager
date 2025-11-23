@@ -22,3 +22,8 @@ class DownloaderConfig:
 
     metadata_delimiter_artist: str = ", "
     metadata_delimiter_album_artist: str = ", "
+
+    file_permissions: int = 0o664
+    directory_permissions: int = 0o775
+    owner: int = 0
+    group: int = 0

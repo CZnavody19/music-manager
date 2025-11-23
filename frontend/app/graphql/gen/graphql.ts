@@ -47,6 +47,7 @@ export type Mutation = {
   changeLogin: Scalars['Boolean']['output'];
   deletePlexTrack: Scalars['Boolean']['output'];
   deleteTrack: Scalars['Boolean']['output'];
+  download: Scalars['Boolean']['output'];
   enableDiscord: Scalars['Boolean']['output'];
   enablePlex: Scalars['Boolean']['output'];
   enableTidal: Scalars['Boolean']['output'];
@@ -211,9 +212,13 @@ export type TidalConfig = {
   authExpiresAt: Scalars['Time']['output'];
   authRefreshToken: Scalars['String']['output'];
   authTokenType: Scalars['String']['output'];
+  directoryPermissions: Scalars['Int']['output'];
   downloadRetries: Scalars['Int']['output'];
   downloadThreads: Scalars['Int']['output'];
   downloadTimeout: Scalars['Int']['output'];
+  filePermissions: Scalars['Int']['output'];
+  group: Scalars['Int']['output'];
+  owner: Scalars['Int']['output'];
 };
 
 export type TidalConfigInput = {
@@ -224,9 +229,13 @@ export type TidalConfigInput = {
   authExpiresAt: Scalars['Time']['input'];
   authRefreshToken: Scalars['String']['input'];
   authTokenType: Scalars['String']['input'];
+  directoryPermissions: Scalars['Int']['input'];
   downloadRetries: Scalars['Int']['input'];
   downloadThreads: Scalars['Int']['input'];
   downloadTimeout: Scalars['Int']['input'];
+  filePermissions: Scalars['Int']['input'];
+  group: Scalars['Int']['input'];
+  owner: Scalars['Int']['input'];
 };
 
 export type Track = {

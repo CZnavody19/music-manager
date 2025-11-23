@@ -133,16 +133,20 @@ type ComplexityRoot struct {
 	}
 
 	TidalConfig struct {
-		AudioQuality     func(childComplexity int) int
-		AuthAccessToken  func(childComplexity int) int
-		AuthClientID     func(childComplexity int) int
-		AuthClientSecret func(childComplexity int) int
-		AuthExpiresAt    func(childComplexity int) int
-		AuthRefreshToken func(childComplexity int) int
-		AuthTokenType    func(childComplexity int) int
-		DownloadRetries  func(childComplexity int) int
-		DownloadThreads  func(childComplexity int) int
-		DownloadTimeout  func(childComplexity int) int
+		AudioQuality         func(childComplexity int) int
+		AuthAccessToken      func(childComplexity int) int
+		AuthClientID         func(childComplexity int) int
+		AuthClientSecret     func(childComplexity int) int
+		AuthExpiresAt        func(childComplexity int) int
+		AuthRefreshToken     func(childComplexity int) int
+		AuthTokenType        func(childComplexity int) int
+		DirectoryPermissions func(childComplexity int) int
+		DownloadRetries      func(childComplexity int) int
+		DownloadThreads      func(childComplexity int) int
+		DownloadTimeout      func(childComplexity int) int
+		FilePermissions      func(childComplexity int) int
+		Group                func(childComplexity int) int
+		Owner                func(childComplexity int) int
 	}
 
 	Track struct {
@@ -665,6 +669,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.TidalConfig.AuthTokenType(childComplexity), true
+	case "TidalConfig.directoryPermissions":
+		if e.complexity.TidalConfig.DirectoryPermissions == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.DirectoryPermissions(childComplexity), true
 	case "TidalConfig.downloadRetries":
 		if e.complexity.TidalConfig.DownloadRetries == nil {
 			break
@@ -683,6 +693,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.TidalConfig.DownloadTimeout(childComplexity), true
+	case "TidalConfig.filePermissions":
+		if e.complexity.TidalConfig.FilePermissions == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.FilePermissions(childComplexity), true
+	case "TidalConfig.group":
+		if e.complexity.TidalConfig.Group == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.Group(childComplexity), true
+	case "TidalConfig.owner":
+		if e.complexity.TidalConfig.Owner == nil {
+			break
+		}
+
+		return e.complexity.TidalConfig.Owner(childComplexity), true
 
 	case "Track.artist":
 		if e.complexity.Track.Artist == nil {
@@ -968,6 +996,10 @@ type TidalConfig {
     downloadRetries: Int!
     downloadThreads: Int!
     audioQuality: String!
+    filePermissions: Int!
+    directoryPermissions: Int!
+    owner: Int!
+    group: Int!
 }
 
 input TidalConfigInput {
@@ -981,6 +1013,10 @@ input TidalConfigInput {
     downloadRetries: Int!
     downloadThreads: Int!
     audioQuality: String!
+    filePermissions: Int!
+    directoryPermissions: Int!
+    owner: Int!
+    group: Int!
 }
 
 extend type Query {
@@ -3017,6 +3053,14 @@ func (ec *executionContext) fieldContext_Query_getTidalConfig(_ context.Context,
 				return ec.fieldContext_TidalConfig_downloadThreads(ctx, field)
 			case "audioQuality":
 				return ec.fieldContext_TidalConfig_audioQuality(ctx, field)
+			case "filePermissions":
+				return ec.fieldContext_TidalConfig_filePermissions(ctx, field)
+			case "directoryPermissions":
+				return ec.fieldContext_TidalConfig_directoryPermissions(ctx, field)
+			case "owner":
+				return ec.fieldContext_TidalConfig_owner(ctx, field)
+			case "group":
+				return ec.fieldContext_TidalConfig_group(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TidalConfig", field.Name)
 		},
@@ -3972,6 +4016,122 @@ func (ec *executionContext) fieldContext_TidalConfig_audioQuality(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_filePermissions(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_filePermissions,
+		func(ctx context.Context) (any, error) {
+			return obj.FilePermissions, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_filePermissions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_directoryPermissions(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_directoryPermissions,
+		func(ctx context.Context) (any, error) {
+			return obj.DirectoryPermissions, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_directoryPermissions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_owner(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_owner,
+		func(ctx context.Context) (any, error) {
+			return obj.Owner, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TidalConfig_group(ctx context.Context, field graphql.CollectedField, obj *model.TidalConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TidalConfig_group,
+		func(ctx context.Context) (any, error) {
+			return obj.Group, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TidalConfig_group(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TidalConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6015,7 +6175,7 @@ func (ec *executionContext) unmarshalInputTidalConfigInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"authTokenType", "authAccessToken", "authRefreshToken", "authExpiresAt", "authClientID", "authClientSecret", "downloadTimeout", "downloadRetries", "downloadThreads", "audioQuality"}
+	fieldsInOrder := [...]string{"authTokenType", "authAccessToken", "authRefreshToken", "authExpiresAt", "authClientID", "authClientSecret", "downloadTimeout", "downloadRetries", "downloadThreads", "audioQuality", "filePermissions", "directoryPermissions", "owner", "group"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6092,6 +6252,34 @@ func (ec *executionContext) unmarshalInputTidalConfigInput(ctx context.Context, 
 				return it, err
 			}
 			it.AudioQuality = data
+		case "filePermissions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filePermissions"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FilePermissions = data
+		case "directoryPermissions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("directoryPermissions"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DirectoryPermissions = data
+		case "owner":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("owner"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Owner = data
+		case "group":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("group"))
+			data, err := ec.unmarshalNInt2int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Group = data
 		}
 	}
 
@@ -6966,6 +7154,26 @@ func (ec *executionContext) _TidalConfig(ctx context.Context, sel ast.SelectionS
 			}
 		case "audioQuality":
 			out.Values[i] = ec._TidalConfig_audioQuality(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "filePermissions":
+			out.Values[i] = ec._TidalConfig_filePermissions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "directoryPermissions":
+			out.Values[i] = ec._TidalConfig_directoryPermissions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "owner":
+			out.Values[i] = ec._TidalConfig_owner(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "group":
+			out.Values[i] = ec._TidalConfig_group(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

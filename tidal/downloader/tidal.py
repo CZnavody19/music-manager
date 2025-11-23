@@ -2,7 +2,7 @@ from tidalapi.media import Track, AudioExtensions, Stream
 from tidalapi.session import Session
 
 from pathlib import Path
-from shutil import move
+from shutil import move, chown
 from datetime import datetime
 from requests import Session as RequestSession, adapters, Response, get
 from os import path
@@ -133,9 +133,13 @@ class TidalDownloader:
 
         new_path = Path(self.config.download_path) / track.artist.name / track.album.name / f"{track.track_num:02d} - {track.name}{AudioExtensions.FLAC}"
         
-        new_path.parent.mkdir(parents=True, exist_ok=True)
+        new_path.parent.mkdir(parents=True, exist_ok=True, mode=self.config.directory_permissions)
+        chown_up_to(new_path.parent, Path(self.config.download_path), user=self.config.owner, group=self.config.group, mode=self.config.directory_permissions)
 
         move(file_path, new_path)
+
+        new_path.chmod(self.config.file_permissions)
+        chown(new_path, user=self.config.owner, group=self.config.group)
 
         return new_path
     
@@ -144,6 +148,9 @@ class TidalDownloader:
 
         with open(lyrics_path, "w", encoding="utf-8") as f:
             f.write(lyrics)
+
+        lyrics_path.chmod(self.config.file_permissions)
+        chown(lyrics_path, user=self.config.owner, group=self.config.group)
 
     def _handle_metadata(self, track: Track, stream: Stream, path_media: Path) -> Metadata | None:
         """
@@ -347,3 +354,17 @@ class TidalDownloader:
                 with open(part, "rb") as infile:
                     while segment := infile.read(self.config.block_size):
                         outfile.write(segment)
+
+def chown_up_to(path: Path, stop_at: Path, user: int, group: int, mode: int) -> None:
+    path = path.resolve()
+    stop_at = stop_at.resolve()
+
+    current = path
+    while True:
+        chown(current, user=user, group=group)
+        current.chmod(mode)
+
+        if current == stop_at:
+            break
+
+        current = current.parent
